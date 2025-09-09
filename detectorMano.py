@@ -10,13 +10,26 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import autopy
 from mano import Mano
 import base64
-
+import json
 
 class CVMano:
 
 
 
     def __init__(self):
+        self.acciones_indice = {
+            'ctrl+Tap': self.__press_alt_tab,
+            'ctrl+Tap3': self.__press_alt_tab2,
+            'ctrl+Tap4': self.__press_alt_tab3,
+            'ctrl+Tap5': self.__press_alt_tab4,
+        }
+        self.AccionesDerech={
+            'click_izquierdo': pyautogui.click,
+            'control_mouse': self.__moverMouseSuavizado,
+            'click_derecho': pyautogui.rightClick,
+            'click_scroll': self.Scroll
+        }
+        self.cargar()
         self.__URL_PRINCIPAL = 'https://www.youtube.com/watch?v=44pt8w67S8I'
         self.__camara = cv2.VideoCapture(0)
         self.__Mpmanos = mp.solutions.hands
@@ -33,10 +46,28 @@ class CVMano:
         self.tX=0
         self.tY =0
         self.x,self.y=0,0
-        self.manoDerecha=Mano(self.__moverMouseSuavizado,pyautogui.click,pyautogui.rightClick,self.Scroll)
-        self.manoIzquierda=Mano(self.__press_alt_tab,self.__press_alt_tab2,self.__press_alt_tab3,self.__press_alt_tab4)
+ 
         self.CVMano=None
-        
+
+    def cargar(self): 
+        try:
+            with open("Comando.json", 'r', encoding='utf-8') as archivo:
+                datos = json.load(archivo)
+                self.manoDerecha=Mano(self.AccionesDerech[datos['Derecha']['indice']],self.AccionesDerech[datos['Derecha']['corazon']],self.AccionesDerech[datos['Derecha']['anular']],self.AccionesDerech[datos['Derecha']['meñique']])
+                self.manoIzquierda=Mano(self.AccionesDerech[datos['Izquierda']['indice']],self.AccionesDerech[datos['Izquierda']['corazon']],self.AccionesDerech[datos['Izquierda']['anular']],self.AccionesDerech[datos['Izquierda']['meñique']])
+        except FileNotFoundError:
+            print(f"Error: El archivo Comando.json no fue encontrado.")
+        except json.JSONDecodeError:
+            print(f"Error: El archivo Comando.json no es un JSON válido.")
+        except Exception as e:
+            print(f"Ocurrió un error inesperado: {e}")       
+    def guardar_datos(self,datos):
+        try:
+            with open("Comando.json","w") as arch:
+                json.dump(datos,arch,indent=4)
+        except Exception as err:
+            print(err)
+
     def inicio(self):
         while True:
             
@@ -134,8 +165,7 @@ class CVMano:
                                     self.manoIzquierda.Anular()  # Agregado si falta referencia a dedo anular
                                 elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
                                     self.manoIzquierda.mañique()
-                                else:
-                                    print("No se detectó ningún gesto válido.")  # Mensaje de depuración
+                                
                         
                         elif label == 'Right':
                             
@@ -148,8 +178,10 @@ class CVMano:
                                 self.tX,self.tY=0,0 
                                 self.manoDerecha.Corazon()
                             
-                            elif distanciaDed[2] < 25 and distanciaDed[1] > 25:
+                            elif distanciaDed[2] < 25 and all(d > 25 for d in distanciaDed[3:]):
                                 self.manoDerecha.Anular()
+                            elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
+                                self.manoDerecha.mañique()
                             
                                 self.tX,self.tY=0,0 
             # --- ¡AQUÍ ESTÁ LA PARTE CRÍTICA QUE FALTA EN TU CÓDIGO ACTUAL! ---
@@ -286,6 +318,8 @@ class CVMano:
                 self.pubix, self.pubiy = cubix, cubiy
         except Exception as e:
             print(f"{e}")
+    def setSuavisado(self,c):
+        self.__ventana_suavizado=c
     def __movermouseV2(self):
             self.x, self.y = self.hand_landmarks.landmark[8].x *  self.w, self.hand_landmarks.landmark[8].y  * self.h
             if(self.tY==0 and self.tX==0):
@@ -299,6 +333,58 @@ class CVMano:
                 pyautogui.moveRel(dx * 0.3, dy * 0.3)  # Suavizado con factor 0.6
 
         # Actualizar la posición actual
+    def setUrl(self,url):
+        self.__URL_PRINCIPAL=url
+    def setIzqIndice(self,indice):
         
+
+
+
+        if indice in self.acciones_indice:
+            self.manoIzquierda.setIndice(self.acciones_indice[indice])
+        
+    def setIzqCorazon(self,Corazon):
+        
+
+        if Corazon in self.acciones_indice:
+            self.manoIzquierda.setCorazon(self.acciones_indice[Corazon])
+        
+    def setIzqAnular(self,Anular):
+        
+        if Anular in self.acciones_indice:
+            self.manoIzquierda.setAnular(self.acciones_indice[Anular])
+        
+    def setIzqMeñique(self,Meñique):
+        
+
+
+        if Meñique in self.acciones_indice:
+            self.manoIzquierda.setMeñique(self.acciones_indice[Meñique])
+        
+    def setDereIndice(self,indice):
+
+
+
+        if indice in self.AccionesDerech:
+            self.manoDerecha.setIndice(self.AccionesDerech[indice])
+    def setDereCorazon(self,indice):
+
+
+
+        if indice in self.AccionesDerech:
+            self.manoDerecha.setCorazon(self.AccionesDerech[indice])
+    def setDereAnular(self,indice):
+
+
+
+        if indice in self.AccionesDerech:
+            self.manoDerecha.setAnular(self.AccionesDerech[indice])
+    def setDereMeñique(self,indice):
+
+
+
+        if indice in self.AccionesDerech:
+            self.manoDerecha.setMeñique(self.AccionesDerech[indice])
+                    
     def Scroll(self):
         pyautogui.scroll(100)

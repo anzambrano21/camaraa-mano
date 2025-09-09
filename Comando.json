@@ -1,0 +1,15 @@
+{
+    "Izquierda":{
+        "indice":"ctrl+Tap",
+        "corazon":"ctrl+Tap3",
+        "anular":"ctrl+Tap4",
+        "meñique":"ctrl+Tap5"
+    },
+    "Derecha":{
+        "sensivilidad":12,
+        "indice":"click_izquierdo",
+        "corazon":"control_mouse",
+        "anular":"click_derecho",
+        "meñique":"click_scroll"
+    }
+}

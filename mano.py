@@ -4,3 +4,11 @@ class Mano:
         self.Corazon=Corazon
         self.Anular=Anular
         self.mañique=mañique
+    def setIndice(self,indice):
+        self.Indice=indice
+    def setCorazon(self,Corazon):
+        self.Corazon=Corazon
+    def setAnular(self,Anular):
+        self.Anular=Anular
+    def setMeñique(self,mañique):
+        self.mañique=mañique

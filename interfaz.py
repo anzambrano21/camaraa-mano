@@ -26,6 +26,153 @@ def main(page:Page):
             imagen=camara.inicio2()
             camera_feed_image.src_base64=imagen
             page.update()
+    # 1. Referencia para el TextField de URL
+    url_text_field = ft.TextField('', width=600, label="Introduce la URL aquí")
+
+    # 2. Referencias para los RadioGroup de Atajos
+    radio_group_indice = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_corazon = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_anular = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_menique = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_indiceDere = ft.RadioGroup(
+    content=ft.Column([
+        ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+        ft.Radio(value="click_derecho", label="Click Derecho"),
+        ft.Radio(value="control_mouse", label="Control Mouse"),
+        ft.Radio(value="click_scroll", label="Click Scroll"),
+    ]),
+    value="click_izquierdo", # Valor por defecto
+)
+
+    radio_group_corazon_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_anular_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+
+    radio_group_menique_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value="click_izquierdo", # Valor por defecto
+    )
+    def set_value(e):
+        coefi_text.value=str(int(e.control.value))
+        page.update()
+
+    coefi_text = ft.Text("0", size=20)
+    suavizadoMause=ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change= set_value)
+                    
+                    
+
+    def set_values(e):
+        """Función que se ejecuta al hacer clic en 'Guardar' o 'Salir Sin Guardar'
+           y obtiene los valores de los inputs.
+        """
+        url_value = url_text_field.value
+        indice_shortcut = radio_group_indice.value
+        corazon_shortcut = radio_group_corazon.value
+        anular_shortcut = radio_group_anular.value
+        menique_shortcut = radio_group_menique.value
+        value=[url_value,indice_shortcut,corazon_shortcut,anular_shortcut,menique_shortcut]
+        
+        if(len(set(value))==len(value)):
+            
+                camara.setUrl(url_value)
+                camara.setIzqIndice(value[1])
+                camara.setIzqCorazon(value[2])
+                camara.setIzqAnular(value[3])
+                camara.setIzqMeñique(value[4])
+                paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
+                paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
+                page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
+                paginaAnimado.update()
+
+        else:
+            page.open(ft.SnackBar(ft.Text('Valores Invalidos'),bgcolor=ft.Colors.RED_200))
+            paginaAnimado.update()
+    
+    def get_radio_values():
+        sencivilidad=suavizadoMause.value
+        camara.setSuavisado(sencivilidad)
+        """
+        Obtiene los valores seleccionados de cada RadioGroup de los atajos de dedos.
+        Retorna un diccionario con el dedo como clave y el valor seleccionado como valor.
+        """
+        # Accede al valor de cada RadioGroup usando las variables que creamos.
+        indice_value = radio_group_indiceDere.value
+        corazon_value = radio_group_corazon_Dere.value
+        anular_value = radio_group_anular_Dere.value
+        menique_value = radio_group_menique_Dere.value
+        value=[indice_value,corazon_value,anular_value,menique_value]
+        if(len(set(value))==len(value)):
+            camara.setDereIndice(indice_value)
+            camara.setDereCorazon(corazon_value)
+            camara.setDereAnular(anular_value)
+            camara.setDereMeñique(menique_value)
+            paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
+            paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
+            page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
+            paginaAnimado.update()
+        else:
+            page.open(ft.SnackBar(ft.Text('Valores Invalidos'),bgcolor=ft.Colors.RED_200))
+            paginaAnimado.update()
+
+        
+
 
     def seturl(e):
         paginaAnimado.content = VistaSetin if paginaAnimado.content == paginaPrincipal else paginaPrincipal
@@ -39,9 +186,7 @@ def main(page:Page):
         page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
         paginaAnimado.update()
 
-    def handle_change(e):
-        Coefi.value = str(int(e.control.value))
-        page.update()
+
 
     paginaPrincipal=ft.Container(
         ft.Row(
@@ -96,177 +241,118 @@ def main(page:Page):
 
     ,margin=ft.margin.only(left=50, top=90, right=50, bottom=0))
     
-    VistaSetin=ft.Container(
+    VistaSetin = ft.Container(
         ft.Column(
             controls=[
-                ft.Text('Configuracion de Mause',size=50),
-                ft.Text('Suavizado de Mause'),
+                ft.Text('Configuración de Mouse', size=50),
+                ft.Text('Suavizado de Mouse'),
                 ft.Row(controls=[
-                    ft.CupertinoSlider(divisions=100, max=100,width=1000,on_change=handle_change),
-                    Coefi:=ft.Text('0')
+                suavizadoMause,
+                coefi_text 
                 ]),
-                
                 ft.Text('Atajos'),
 
                 ft.Row(controls=[
                     ft.Column(
                         [
-                            ft.Text('Indice'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-                                    ft.Radio(value="click_derecho", label="Click Derecho"),
-                                    ft.Radio(value="control_mouse", label="Control Mouse"),
-                                    ft.Radio(value="click_scroll", label="Click Scroll"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
+                            ft.Text('Indice'),
+                            radio_group_indiceDere, # <--- ¡Aquí usamos la variable!
                         ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=5,
                     ),
                     ft.Column(
                         [
-                            ft.Text('Corazon'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-                                    ft.Radio(value="click_derecho", label="Click Derecho"),
-                                    ft.Radio(value="control_mouse", label="Control Mouse"),
-                                    ft.Radio(value="click_scroll", label="Click Scroll"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
+                            ft.Text('Corazón'),
+                            radio_group_corazon_Dere, # <--- ¡Aquí usamos la variable!
                         ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=5,
                     ),
                     ft.Column(
                         [
-                            ft.Text('Anular'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-                                    ft.Radio(value="click_derecho", label="Click Derecho"),
-                                    ft.Radio(value="control_mouse", label="Control Mouse"),
-                                    ft.Radio(value="click_scroll", label="Click Scroll"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
+                            ft.Text('Anular'),
+                            radio_group_anular_Dere, # <--- ¡Aquí usamos la variable!
                         ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=5,
                     ),
                     ft.Column(
                         [
-                            ft.Text('Meñique'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-                                    ft.Radio(value="click_derecho", label="Click Derecho"),
-                                    ft.Radio(value="control_mouse", label="Control Mouse"),
-                                    ft.Radio(value="click_scroll", label="Click Scroll"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
+                            ft.Text('Meñique'),
+                            radio_group_menique_Dere, # <--- ¡Aquí usamos la variable!
                         ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=5,
                     ),
-                ],alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
                 ft.Container(
                     ft.Row(controls=[
-                        ft.Button('Guardar',on_click=seturl),
-                        ft.Button('Salir Sin Guardar',on_click=seturl),
-                    ]),margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
+                        # Asumiendo que 'seturl' es tu función para guardar o salir sin guardar
+                        # y que llama a 'get_radio_values' internamente
+                        ft.Button('Guardar', on_click=lambda e: print(get_radio_values())), # Ejemplo de uso
+                        ft.Button('Salir Sin Guardar', on_click=lambda e: print("Salir sin guardar")) # Ejemplo
+                    ]), margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
                 )
-                ]),margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
-
+            ]), margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
     )
 
-    VistaSetinTeclado=ft.Container(
-                ft.Column(
+    VistaSetinTeclado = ft.Container(
+        ft.Column(
             controls=[
-                ft.Text('Configuracion de Teclado',size=50),
+                ft.Text('Configuración de Teclado', size=50),
                 ft.Text('URL'),
-                ft.TextField('',width=600),
+                url_text_field,  # Usamos la referencia al TextField
                 
                 ft.Text('Atajos'),
 
-                ft.Row(controls=[
-                    ft.Column(
-                        [
-                            ft.Text('Indice'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-                                    ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-                                    ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-                                    ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
-                    ),
-                    ft.Column(
-                        [
-                            ft.Text('Corazon'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-                                    ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-                                    ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-                                    ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
-                    ),
-                    ft.Column(
-                        [
-                            ft.Text('Anular'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-                                    ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-                                    ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-                                    ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
-                    ),
-                    ft.Column(
-                        [
-                            ft.Text('Meñique'), # Título del dedo (Indice, Corazon, etc.)
-                            ft.RadioGroup(
-                                content=ft.Column([
-                                    ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-                                    ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-                                    ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-                                    ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-                                ]),
-                                value="click_izquierdo", # Valor por defecto
-                            )
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, # Alinea los elementos de la columna al inicio (izquierda)
-                        spacing=5, # Espacio entre el título y el grupo de radios
-                    ),
-                ],alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row(
+                    controls=[
+                        ft.Column(
+                            [
+                                ft.Text('Indice'),
+                                radio_group_indice, # Usamos la referencia al RadioGroup
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=5,
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text('Corazon'),
+                                radio_group_corazon, # Usamos la referencia al RadioGroup
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=5,
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text('Anular'),
+                                radio_group_anular, # Usamos la referencia al RadioGroup
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=5,
+                        ),
+                        ft.Column(
+                            [
+                                ft.Text('Meñique'),
+                                radio_group_menique, # Usamos la referencia al RadioGroup
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=5,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                ),
                 ft.Container(
                     ft.Row(controls=[
-                        ft.Button('Guardar',on_click=lambda e:seturl(e)),
-                        ft.Button('Salir Sin Guardar',on_click=seturl),
-                    ]),margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
+                        ft.ElevatedButton('Guardar', on_click=set_values), # Cambiado a ElevatedButton
+                        ft.ElevatedButton('Salir Sin Guardar', on_click=seturl2), # Cambiado a ElevatedButton
+                    ]),
+                    margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
                 )
-                ]),margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
-
+            ]
+        ),
+        margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
     )
 
     paginaAnimado=ft.AnimatedSwitcher(
