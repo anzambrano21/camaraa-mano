@@ -109,11 +109,12 @@ def main(page:Page):
         ]),
         value="click_izquierdo", # Valor por defecto
     )
+    coefi_text = ft.Text("0", size=20)
+    
     def set_value(e):
         coefi_text.value=str(int(e.control.value))
         page.update()
 
-    coefi_text = ft.Text("0", size=20)
     suavizadoMause=ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change= set_value)
                     
                     
@@ -127,15 +128,17 @@ def main(page:Page):
         corazon_shortcut = radio_group_corazon.value
         anular_shortcut = radio_group_anular.value
         menique_shortcut = radio_group_menique.value
-        value=[url_value,indice_shortcut,corazon_shortcut,anular_shortcut,menique_shortcut]
+        value=[indice_shortcut,corazon_shortcut,anular_shortcut,menique_shortcut]
         
         if(len(set(value))==len(value)):
             
                 camara.setUrl(url_value)
-                camara.setIzqIndice(value[1])
-                camara.setIzqCorazon(value[2])
-                camara.setIzqAnular(value[3])
-                camara.setIzqMeñique(value[4])
+                camara.setManoIz(value)
+                camara.datos['Izquierda']['indice']=indice_shortcut
+                camara.datos['Izquierda']['corazon']=corazon_shortcut
+                camara.datos['Izquierda']['anular']=anular_shortcut
+                camara.datos['Izquierda']['menique']=menique_shortcut
+                camara.guardar_datos()
                 paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
                 paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
                 page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
@@ -159,14 +162,21 @@ def main(page:Page):
         menique_value = radio_group_menique_Dere.value
         value=[indice_value,corazon_value,anular_value,menique_value]
         if(len(set(value))==len(value)):
-            camara.setDereIndice(indice_value)
-            camara.setDereCorazon(corazon_value)
-            camara.setDereAnular(anular_value)
-            camara.setDereMeñique(menique_value)
-            paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
-            paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
-            page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
-            paginaAnimado.update()
+
+            try:
+                camara.setManoDe(value)
+                camara.datos['Derecha']['indice']=indice_value
+                camara.datos['Derecha']['corazon']=corazon_value
+                camara.datos['Derecha']['anular']=anular_value
+                camara.datos['Derecha']['menique']=menique_value
+                camara.guardar_datos()
+                paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
+                paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
+                page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
+                paginaAnimado.update()
+            except Exception as e:
+                print(e)
+            
         else:
             page.open(ft.SnackBar(ft.Text('Valores Invalidos'),bgcolor=ft.Colors.RED_200))
             paginaAnimado.update()

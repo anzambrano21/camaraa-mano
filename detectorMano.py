@@ -17,17 +17,21 @@ class CVMano:
 
 
     def __init__(self):
-        self.acciones_indice = {
-            'ctrl+Tap': self.__press_alt_tab,
-            'ctrl+Tap3': self.__press_alt_tab2,
-            'ctrl+Tap4': self.__press_alt_tab3,
-            'ctrl+Tap5': self.__press_alt_tab4,
-        }
-        self.AccionesDerech={
-            'click_izquierdo': pyautogui.click,
-            'control_mouse': self.__moverMouseSuavizado,
-            'click_derecho': pyautogui.rightClick,
-            'click_scroll': self.Scroll
+        self.datos={}
+
+        self.atajosManos={
+            
+                'click_izquierdo': pyautogui.click,
+                'control_mouse': self.__moverMouseSuavizado,
+                'click_derecho': pyautogui.rightClick,
+                'click_scroll': self.Scroll,
+            
+            
+                'ctrl+Tap': lambda: self.__press_alt_tab(0.5,1),
+                'ctrl+Tap3': lambda:self.__press_alt_tab(0.5,2),
+                'ctrl+Tap4': lambda:self.__press_alt_tab(0.5,3),
+                'ctrl+Tap5': lambda:self.__press_alt_tab(0.5,4),
+            
         }
         self.cargar()
         self.__URL_PRINCIPAL = 'https://www.youtube.com/watch?v=44pt8w67S8I'
@@ -52,19 +56,19 @@ class CVMano:
     def cargar(self): 
         try:
             with open("Comando.json", 'r', encoding='utf-8') as archivo:
-                datos = json.load(archivo)
-                self.manoDerecha=Mano(self.AccionesDerech[datos['Derecha']['indice']],self.AccionesDerech[datos['Derecha']['corazon']],self.AccionesDerech[datos['Derecha']['anular']],self.AccionesDerech[datos['Derecha']['meñique']])
-                self.manoIzquierda=Mano(self.AccionesDerech[datos['Izquierda']['indice']],self.AccionesDerech[datos['Izquierda']['corazon']],self.AccionesDerech[datos['Izquierda']['anular']],self.AccionesDerech[datos['Izquierda']['meñique']])
+                self.datos = json.load(archivo)
+                self.manoDerecha=Mano(self.atajosManos[self.datos['Derecha']['indice']],self.atajosManos[self.datos['Derecha']['corazon']],self.atajosManos[self.datos['Derecha']['anular']],self.atajosManos[self.datos['Derecha']['menique']])
+                self.manoIzquierda=Mano(self.atajosManos[self.datos['Izquierda']['indice']],self.atajosManos[self.datos['Izquierda']['corazon']],self.atajosManos[self.datos['Izquierda']['anular']],self.atajosManos[self.datos['Izquierda']['menique']])
         except FileNotFoundError:
             print(f"Error: El archivo Comando.json no fue encontrado.")
         except json.JSONDecodeError:
             print(f"Error: El archivo Comando.json no es un JSON válido.")
         except Exception as e:
             print(f"Ocurrió un error inesperado: {e}")       
-    def guardar_datos(self,datos):
+    def guardar_datos(self):
         try:
             with open("Comando.json","w") as arch:
-                json.dump(datos,arch,indent=4)
+                json.dump(self.datos,arch,indent=4)
         except Exception as err:
             print(err)
 
@@ -235,12 +239,14 @@ class CVMano:
             es_pulgar_y_cerrado = punta_pulgar_coords[1] > base_pulgar_coords[1] + UMBRAL_Y_CERRADO_DEDOS / 2 
             es_pulgar_cerrado = (es_pulgar_lateralmente_cerrado or es_pulgar_y_cerrado) and es_pulgar_profundidad_cerrado
             self.__dedos_cerrados_estado.append(es_pulgar_cerrado)
+ 
     def __distanciaDedo(self,hand_landmarks):
         puntaded=[8,12,16,20]
         pulgar = np.array([hand_landmarks.landmark[4].x * self.w, hand_landmarks.landmark[4].y * self.h])
         puntos=[np.array([int(hand_landmarks.landmark[i].x*self.w),int(hand_landmarks.landmark[i].y*self.h)]) for i in puntaded]
         distancia=[np.linalg.norm(puntos[i]-pulgar) for i in range(len(puntos))]
         return distancia
+  
     def __volumen(self):
         puntaindice = self.CVMano.landmark[8]  # Nodo 8
         puntapulgar = self.CVMano.landmark[4]
@@ -254,53 +260,26 @@ class CVMano:
         volume = cast(interface, POINTER(IAudioEndpointVolume))
         porcentaje = max(0, min(100, porcentaje))
         volume.SetMasterVolumeLevelScalar(porcentaje / 100, None)
-    def __press_alt_tab(self,duration=0.5):
+   # mejorar tambien los alt+tap
+    def __press_alt_tab(self,duration=0.5,n=1):
         try:
             pyautogui.keyDown('alt')
-            pyautogui.press('tab')
-            time.sleep(duration)
-            pyautogui.keyUp('alt')
+            for i in range(n):
+                
+                pyautogui.press('tab')
+                time.sleep(duration)
+            pyautogui.keyUp('alt')    
             
         except Exception as e:
             print(f"{e}")
-    def __press_alt_tab2(self,duration=0.5):
-        try:
-            pyautogui.keyDown('alt')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            time.sleep(duration)
-            pyautogui.keyUp('alt')
-            
-        except Exception as e:
-            print(f"{e}")
-    def __press_alt_tab3(self,duration=0.5):
-        try:
-            pyautogui.keyDown('alt')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            time.sleep(duration)
-            pyautogui.keyUp('alt')
-            
-        except Exception as e:
-            print(f"{e}")
-    def __press_alt_tab4(self,duration=0.5):
-        try:
-            pyautogui.keyDown('alt')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            pyautogui.press('tab')
-            time.sleep(duration)
-            pyautogui.keyUp('alt')
-            
-        except Exception as e:
-            print(f"{e}")
+  
+
     def abrir_enlace_una_vez(self):
         if not self.__enlace_principal_abierto:
             webbrowser.open_new_tab(self.__URL_PRINCIPAL)
             print(f"Abriendo el navegador con el enlace: {self.__URL_PRINCIPAL}")
             self.__enlace_principal_abierto = True
+   
     def __moverMouseSuavizado(self):
         try:
             self.x=self.CVMano.landmark[8].x*self.w
@@ -318,8 +297,10 @@ class CVMano:
                 self.pubix, self.pubiy = cubix, cubiy
         except Exception as e:
             print(f"{e}")
+  
     def setSuavisado(self,c):
         self.__ventana_suavizado=c
+  
     def __movermouseV2(self):
             self.x, self.y = self.hand_landmarks.landmark[8].x *  self.w, self.hand_landmarks.landmark[8].y  * self.h
             if(self.tY==0 and self.tX==0):
@@ -333,58 +314,43 @@ class CVMano:
                 pyautogui.moveRel(dx * 0.3, dy * 0.3)  # Suavizado con factor 0.6
 
         # Actualizar la posición actual
+  
     def setUrl(self,url):
         self.__URL_PRINCIPAL=url
-    def setIzqIndice(self,indice):
+    
+    def set_datos(self,direccion,datos):
+        self.datos[direccion]=datos
+
+    def setManoIz(self,indices):
+        self.manoIzquierda.setIndice(self.atajosManos[indices[0]])
+        self.manoIzquierda.setCorazon(self.atajosManos[indices[1]])
+        self.manoIzquierda.setAnular(self.atajosManos[indices[2]])
+        self.manoIzquierda.setMeñique(self.atajosManos[indices[3]])
+        
+    def setManoDe(self,indices):
+        self.manoDerecha.setIndice(self.atajosManos[indices[0]])
+        self.manoDerecha.setCorazon(self.atajosManos[indices[1]])
+        self.manoDerecha.setAnular(self.atajosManos[indices[2]])
+        self.manoDerecha.setMeñique(self.atajosManos[indices[3]])
+       
         
 
-
-
-        if indice in self.acciones_indice:
-            self.manoIzquierda.setIndice(self.acciones_indice[indice])
-        
-    def setIzqCorazon(self,Corazon):
-        
-
-        if Corazon in self.acciones_indice:
-            self.manoIzquierda.setCorazon(self.acciones_indice[Corazon])
-        
-    def setIzqAnular(self,Anular):
-        
-        if Anular in self.acciones_indice:
-            self.manoIzquierda.setAnular(self.acciones_indice[Anular])
-        
-    def setIzqMeñique(self,Meñique):
-        
-
-
-        if Meñique in self.acciones_indice:
-            self.manoIzquierda.setMeñique(self.acciones_indice[Meñique])
-        
-    def setDereIndice(self,indice):
-
-
-
-        if indice in self.AccionesDerech:
-            self.manoDerecha.setIndice(self.AccionesDerech[indice])
-    def setDereCorazon(self,indice):
-
-
-
-        if indice in self.AccionesDerech:
-            self.manoDerecha.setCorazon(self.AccionesDerech[indice])
-    def setDereAnular(self,indice):
-
-
-
-        if indice in self.AccionesDerech:
-            self.manoDerecha.setAnular(self.AccionesDerech[indice])
-    def setDereMeñique(self,indice):
-
-
-
-        if indice in self.AccionesDerech:
-            self.manoDerecha.setMeñique(self.AccionesDerech[indice])
+  
                     
     def Scroll(self):
-        pyautogui.scroll(100)
+        try:
+            y=self.CVMano.landmark[20].y*self.h
+            if(y<self.h/2 ):
+                print('arriba')
+                pyautogui.scroll(100)
+            else:
+                print('abajo')
+                pyautogui.scroll(-100)
+            time.sleep(0.5)
+        except Exception  as e:
+            print(e)
+        
+
+
+       
+        

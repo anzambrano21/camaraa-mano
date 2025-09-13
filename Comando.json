@@ -1,15 +1,15 @@
 {
-    "Izquierda":{
-        "indice":"ctrl+Tap",
-        "corazon":"ctrl+Tap3",
-        "anular":"ctrl+Tap4",
-        "meñique":"ctrl+Tap5"
+    "Izquierda": {
+        "indice": "ctrl+Tap3",
+        "corazon": "ctrl+Tap",
+        "anular": "ctrl+Tap5",
+        "menique": "ctrl+Tap4"
     },
-    "Derecha":{
-        "sensivilidad":12,
-        "indice":"click_izquierdo",
-        "corazon":"control_mouse",
-        "anular":"click_derecho",
-        "meñique":"click_scroll"
+    "Derecha": {
+        "sensivilidad": 12,
+        "indice": "control_mouse",
+        "corazon": "click_izquierdo",
+        "anular": "click_derecho",
+        "menique": "click_scroll"
     }
 }
