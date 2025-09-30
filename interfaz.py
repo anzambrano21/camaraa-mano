@@ -1,4 +1,5 @@
 import flet as ft
+import time
 from flet import Page
 import threading
 from detectorMano import CVMano
@@ -22,10 +23,31 @@ def main(page:Page):
     )
 
     def procesarF():
+            # Establece el FPS objetivo (por ejemplo, 30 FPS es suficiente para una experiencia fluida)
+        fps_objetivo = 30
+        # Calcula el tiempo mínimo por fotograma en segundos
+        tiempo_por_fotograma = 1 / fps_objetivo
+        
         while True:
-            imagen=camara.inicio2()
-            camera_feed_image.src_base64=imagen
+            # Marca el tiempo de inicio de este fotograma
+            inicio_fotograma = time.time()
+            
+            imagen = camara.inicio2()
+            camera_feed_image.src_base64 = imagen
+            
+            # Actualiza la interfaz de usuario
             page.update()
+            
+            # Marca el tiempo de finalización del fotograma
+            fin_fotograma = time.time()
+            
+            # Calcula cuánto tiempo ha tardado en procesarse este fotograma
+            tiempo_transcurrido = fin_fotograma - inicio_fotograma
+            
+            # Si el tiempo transcurrido es menor que el tiempo mínimo por fotograma,
+            # espera la diferencia para mantener el FPS objetivo
+            if tiempo_transcurrido < tiempo_por_fotograma:
+                time.sleep(tiempo_por_fotograma - tiempo_transcurrido)
     # 1. Referencia para el TextField de URL
     url_text_field = ft.TextField('', width=600, label="Introduce la URL aquí")
 
@@ -116,10 +138,8 @@ def main(page:Page):
         page.update()
 
     suavizadoMause=ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change= set_value)
-                    
-                    
-
-    def set_values(e):
+                                     
+    def set_tecladoMap(e):
         """Función que se ejecuta al hacer clic en 'Guardar' o 'Salir Sin Guardar'
            y obtiene los valores de los inputs.
         """
@@ -148,7 +168,7 @@ def main(page:Page):
             page.open(ft.SnackBar(ft.Text('Valores Invalidos'),bgcolor=ft.Colors.RED_200))
             paginaAnimado.update()
     
-    def get_radio_values():
+    def set_MauseMap():
         sencivilidad=suavizadoMause.value
         camara.setSuavisado(sencivilidad)
         """
@@ -181,9 +201,6 @@ def main(page:Page):
             page.open(ft.SnackBar(ft.Text('Valores Invalidos'),bgcolor=ft.Colors.RED_200))
             paginaAnimado.update()
 
-        
-
-
     def seturl(e):
         paginaAnimado.content = VistaSetin if paginaAnimado.content == paginaPrincipal else paginaPrincipal
         paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
@@ -195,8 +212,6 @@ def main(page:Page):
         paginaAnimado.transition= ft.AnimatedSwitcherTransition.FADE
         page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
         paginaAnimado.update()
-
-
 
     paginaPrincipal=ft.Container(
         ft.Row(
@@ -224,7 +239,7 @@ def main(page:Page):
                         ft.Container(
                             content=ft.Column( # Columna interna para los botones
                                 controls=[
-                                    ft.ElevatedButton('URL', on_click=seturl, data=0),
+                                    
                                     ft.ElevatedButton('configurar Ratón', on_click=seturl, data=1),
                                     ft.ElevatedButton('Acciones Teclado', on_click=seturl2, data=2)
                                 ],
@@ -237,9 +252,6 @@ def main(page:Page):
                             alignment=ft.alignment.center # Correcto
                         )
                     ],
-                    # horizontal_alignment en Column es su cross_axis_alignment
-                    horizontal_alignment=ft.CrossAxisAlignment.END, # Alinea el contenido de esta columna a la derecha
-                    alignment=ft.MainAxisAlignment.START, # Alinea el contenido de esta columna verticalmente al inicio
                     
                 )
             ],
@@ -299,8 +311,8 @@ def main(page:Page):
                 ft.Container(
                     ft.Row(controls=[
                         # Asumiendo que 'seturl' es tu función para guardar o salir sin guardar
-                        # y que llama a 'get_radio_values' internamente
-                        ft.Button('Guardar', on_click=lambda e: print(get_radio_values())), # Ejemplo de uso
+                        # y que llama a 'set_MauseMap' internamente
+                        ft.Button('Guardar', on_click=lambda e: print(set_MauseMap())), # Ejemplo de uso
                         ft.Button('Salir Sin Guardar', on_click=lambda e: print("Salir sin guardar")) # Ejemplo
                     ]), margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
                 )
@@ -355,7 +367,7 @@ def main(page:Page):
                 ),
                 ft.Container(
                     ft.Row(controls=[
-                        ft.ElevatedButton('Guardar', on_click=set_values), # Cambiado a ElevatedButton
+                        ft.ElevatedButton('Guardar', on_click=set_tecladoMap), # Cambiado a ElevatedButton
                         ft.ElevatedButton('Salir Sin Guardar', on_click=seturl2), # Cambiado a ElevatedButton
                     ]),
                     margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
@@ -375,8 +387,6 @@ def main(page:Page):
         
     )
     
-    
-
     page.add(
         paginaAnimado
     )

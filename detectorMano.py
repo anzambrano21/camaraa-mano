@@ -33,6 +33,7 @@ class CVMano:
                 'ctrl+Tap5': lambda:self.__press_alt_tab(0.5,4),
             
         }
+
         self.cargar()
         self.__URL_PRINCIPAL = 'https://www.youtube.com/watch?v=44pt8w67S8I'
         self.__camara = cv2.VideoCapture(0)
@@ -57,8 +58,11 @@ class CVMano:
         try:
             with open("Comando.json", 'r', encoding='utf-8') as archivo:
                 self.datos = json.load(archivo)
-                self.manoDerecha=Mano(self.atajosManos[self.datos['Derecha']['indice']],self.atajosManos[self.datos['Derecha']['corazon']],self.atajosManos[self.datos['Derecha']['anular']],self.atajosManos[self.datos['Derecha']['menique']])
-                self.manoIzquierda=Mano(self.atajosManos[self.datos['Izquierda']['indice']],self.atajosManos[self.datos['Izquierda']['corazon']],self.atajosManos[self.datos['Izquierda']['anular']],self.atajosManos[self.datos['Izquierda']['menique']])
+                if(self.datos['Games']['estado']==True):
+                    return
+                else:
+                    self.manoIzquierda=Mano(self.atajosManos[self.datos['Izquierda']['indice']],self.atajosManos[self.datos['Izquierda']['corazon']],self.atajosManos[self.datos['Izquierda']['anular']],self.atajosManos[self.datos['Izquierda']['menique']],None)
+                self.manoDerecha=Mano(self.atajosManos[self.datos['Derecha']['indice']],self.atajosManos[self.datos['Derecha']['corazon']],self.atajosManos[self.datos['Derecha']['anular']],self.atajosManos[self.datos['Derecha']['menique']],None)
         except FileNotFoundError:
             print(f"Error: El archivo Comando.json no fue encontrado.")
         except json.JSONDecodeError:
@@ -297,7 +301,22 @@ class CVMano:
                 self.pubix, self.pubiy = cubix, cubiy
         except Exception as e:
             print(f"{e}")
-  
+
+    def Scroll(self):
+        try:
+            y=self.CVMano.landmark[20].y*self.h
+            if(y<self.h/2 ):
+                print('arriba')
+                pyautogui.scroll(100)
+            else:
+                print('abajo')
+                pyautogui.scroll(-100)
+            time.sleep(0.5)
+        except Exception  as e:
+            print(e)
+        
+
+
     def setSuavisado(self,c):
         self.__ventana_suavizado=c
   
@@ -332,25 +351,4 @@ class CVMano:
         self.manoDerecha.setCorazon(self.atajosManos[indices[1]])
         self.manoDerecha.setAnular(self.atajosManos[indices[2]])
         self.manoDerecha.setMeñique(self.atajosManos[indices[3]])
-       
-        
-
   
-                    
-    def Scroll(self):
-        try:
-            y=self.CVMano.landmark[20].y*self.h
-            if(y<self.h/2 ):
-                print('arriba')
-                pyautogui.scroll(100)
-            else:
-                print('abajo')
-                pyautogui.scroll(-100)
-            time.sleep(0.5)
-        except Exception  as e:
-            print(e)
-        
-
-
-       
-        
