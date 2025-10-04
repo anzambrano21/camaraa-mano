@@ -59,7 +59,7 @@ def main(page:Page):
             ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
             ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Izquierda']['indice'], # Valor por defecto
     )
 
     radio_group_corazon = ft.RadioGroup(
@@ -69,7 +69,7 @@ def main(page:Page):
             ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
             ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Izquierda']['corazon'], # Valor por defecto
     )
 
     radio_group_anular = ft.RadioGroup(
@@ -79,7 +79,7 @@ def main(page:Page):
             ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
             ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Izquierda']['anular'], # Valor por defecto
     )
 
     radio_group_menique = ft.RadioGroup(
@@ -89,9 +89,11 @@ def main(page:Page):
             ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
             ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Izquierda']['menique'], # Valor por defecto
     )
 
+
+    #radios botones de la mano derecha 
     radio_group_indiceDere = ft.RadioGroup(
     content=ft.Column([
         ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
@@ -99,7 +101,7 @@ def main(page:Page):
         ft.Radio(value="control_mouse", label="Control Mouse"),
         ft.Radio(value="click_scroll", label="Click Scroll"),
     ]),
-    value="click_izquierdo", # Valor por defecto
+    value=camara.datos['Derecha']['indice'], # Valor por defecto
 )
 
     radio_group_corazon_Dere = ft.RadioGroup(
@@ -109,7 +111,7 @@ def main(page:Page):
             ft.Radio(value="control_mouse", label="Control Mouse"),
             ft.Radio(value="click_scroll", label="Click Scroll"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Derecha']['corazon'], # Valor por defecto
     )
 
     radio_group_anular_Dere = ft.RadioGroup(
@@ -119,7 +121,7 @@ def main(page:Page):
             ft.Radio(value="control_mouse", label="Control Mouse"),
             ft.Radio(value="click_scroll", label="Click Scroll"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Derecha']['anular'], # Valor por defecto
     )
 
     radio_group_menique_Dere = ft.RadioGroup(
@@ -129,8 +131,11 @@ def main(page:Page):
             ft.Radio(value="control_mouse", label="Control Mouse"),
             ft.Radio(value="click_scroll", label="Click Scroll"),
         ]),
-        value="click_izquierdo", # Valor por defecto
+        value=camara.datos['Derecha']['menique'], # Valor por defecto
     )
+   
+   
+   
     coefi_text = ft.Text("0", size=20)
     
     def set_value(e):
@@ -139,7 +144,7 @@ def main(page:Page):
 
     suavizadoMause=ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change= set_value)
                                      
-    def set_tecladoMap(e):
+    def set_tecladoMap():
         """Función que se ejecuta al hacer clic en 'Guardar' o 'Salir Sin Guardar'
            y obtiene los valores de los inputs.
         """
@@ -204,6 +209,13 @@ def main(page:Page):
     
 
     def SetNavegador(e):
+        try:
+            if(paginaAnimado.content==VistaSetinTeclado):
+                set_tecladoMap()
+            elif(paginaAnimado.content==VistaSetin):
+                set_MauseMap()
+        except Exception as e:
+            print(e)
         index=e.control.selected_index
         print(index)
         if(index==0 ):
@@ -230,7 +242,7 @@ def main(page:Page):
                         on_change=SetNavegador,
                         height=500,
                         
-                        bgcolor=ft.Colors.AMBER,
+                        
                         selected_index=0,
                         destinations=[
                             ft.NavigationRailDestination(
@@ -244,6 +256,18 @@ def main(page:Page):
                             )
                         ]
                     )
+            ),
+            ft.Container(
+                expand=True,
+                
+                alignment=ft.alignment.center,
+                content=ft.Column(
+                    alignment=ft.MainAxisAlignment.END,
+                    controls=[
+                        ft.Text('Modo Game'),
+                        ft.Switch(value=False)
+                    ]
+                )
             )
             ]
         )
@@ -330,15 +354,8 @@ def main(page:Page):
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=5,
                     ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Container(
-                    ft.Row(controls=[
-                        # Asumiendo que 'seturl' es tu función para guardar o salir sin guardar
-                        # y que llama a 'set_MauseMap' internamente
-                        ft.Button('Guardar', on_click=lambda e: print(set_MauseMap())), # Ejemplo de uso
-                        
-                    ]), margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
-                )
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+
             ]), margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
     )
 
@@ -389,13 +406,7 @@ def main(page:Page):
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
-                ft.Container(
-                    ft.Row(controls=[
-                        ft.ElevatedButton('Guardar', on_click=set_tecladoMap), # Cambiado a ElevatedButton
-                         # Cambiado a ElevatedButton
-                    ]),
-                    margin=ft.margin.only(left=0, top=100, right=0, bottom=0)
-                )
+                
             ]
         ),
         margin=ft.margin.only(left=50, top=100, right=50, bottom=0)

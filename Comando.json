@@ -10,16 +10,16 @@
         }
     },
     "Izquierda": {
-        "indice": "ctrl+Tap3",
-        "corazon": "ctrl+Tap",
-        "anular": "ctrl+Tap5",
-        "menique": "ctrl+Tap4"
+        "indice": "ctrl+Tap",
+        "corazon": "ctrl+Tap3",
+        "anular": "ctrl+Tap4",
+        "menique": "ctrl+Tap5"
     },
     "Derecha": {
         "sensivilidad": 12,
         "indice": "click_izquierdo",
-        "corazon": "control_mouse",
-        "anular": "click_derecho",
+        "corazon": "click_derecho",
+        "anular": "control_mouse",
         "menique": "click_scroll"
     }
 }
