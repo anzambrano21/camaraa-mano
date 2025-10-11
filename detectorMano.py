@@ -1,3 +1,5 @@
+import os
+import sys
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -65,10 +67,22 @@ class CVMano:
         hilo = threading.Thread(target=func, args=args, kwargs=kwargs)
         hilo.daemon = True
         hilo.start()
+    def resource_path(self,relative_path):
+        """
+        Obtiene la ruta absoluta del recurso, funciona para desarrollo y para el ejecutable de PyInstaller.
+        """
+        try:
+            # PyInstaller crea una carpeta temporal y guarda la ruta en _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            # En el modo normal (desarrollo), usa la ruta base del script
+            base_path = os.path.abspath(".")
 
+        return os.path.join(base_path, relative_path)
     def cargar(self): 
         try:
-            with open("Comando.json", 'r', encoding='utf-8') as archivo:
+            path_json = self.resource_path("Comando.json")
+            with open(path_json, 'r', encoding='utf-8') as archivo:
                 self.datos = json.load(archivo)
                 if(self.datos['Games']['estado']==True):
                     return
