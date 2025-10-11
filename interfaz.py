@@ -3,6 +3,8 @@ import time
 from flet import Page
 import threading
 from detectorMano import CVMano
+
+
 def main(page:Page):
     page.window.width=1200
     page.window.height=800
@@ -228,7 +230,18 @@ def main(page:Page):
         page.open(ft.SnackBar(ft.Text('Seting'),bgcolor=ft.Colors.GREEN_500))
         paginaAnimado.update()
     
-    
+    def modoGame(e):
+        if(e.control.value):
+            
+            try:
+                camara.ModoGame()
+            except Exception as e:
+                print(e)
+        else:
+            camara.cargar()
+
+
+    #inicio de la construcion de las vistas
     navegador= ft.Container(
         
         
@@ -265,7 +278,7 @@ def main(page:Page):
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
                         ft.Text('Modo Game'),
-                        ft.Switch(value=False)
+                        ft.Switch(value=False, on_change=modoGame)
                     ]
                 )
             )

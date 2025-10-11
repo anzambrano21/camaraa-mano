@@ -11,6 +11,7 @@ import autopy
 from mano import Mano
 import base64
 import json
+import threading
 
 class CVMano:
 
@@ -33,13 +34,19 @@ class CVMano:
                 'ctrl+Tap5': lambda:self.__press_alt_tab(0.5,4),
             
         }
+        self.modoGames= {
+            'indice':lambda: self.precionarTecla(1,'d') ,
+            'corazon':lambda: self.precionarTecla(1,'w'),
+            'anular':lambda: self.precionarTecla(1,'a'),
+            'meniqie':lambda: self.precionarTecla(1,'shift'),
+        }
 
         self.cargar()
         self.__URL_PRINCIPAL = 'https://www.youtube.com/watch?v=44pt8w67S8I'
         self.__camara = cv2.VideoCapture(0)
         self.__Mpmanos = mp.solutions.hands
         self.__manos = self.__Mpmanos.Hands(static_image_mode=False,
-                                            max_num_hands=2,
+                                            max_num_hands=1,
                                             min_detection_confidence=0.9,
                                             min_tracking_confidence=0.8)
         self.__mpDibujar = mp.solutions.drawing_utils
@@ -53,6 +60,11 @@ class CVMano:
         self.x,self.y=0,0
  
         self.CVMano=None
+    
+    def ejecutar_en_hilo(func, *args, **kwargs):
+        hilo = threading.Thread(target=func, args=args, kwargs=kwargs)
+        hilo.daemon = True
+        hilo.start()
 
     def cargar(self): 
         try:
@@ -95,7 +107,7 @@ class CVMano:
                             puntaindice = hand_landmarks.landmark[8]  # Nodo 8
                             puntapulgar = hand_landmarks.landmark[4]
                             self.__dedosCerrados(hand_landmarks)
-                            print(self.__dedos_cerrados_estado)
+                            
                             distanciaDed = self.__distanciaDedo(hand_landmarks)
                             
                             if self.__dedos_cerrados_estado == [False, True, True, True, False]:
@@ -140,6 +152,7 @@ class CVMano:
             
             # Verificar si la cámara está abierta
             self.busqueda, self.imagen = self.__camara.read()
+            self.imagen=cv2.resize(self.imagen, (640, 480))
             self.imagen = cv2.flip(self.imagen, 1)
             imgRGB = cv2.cvtColor(self.imagen, cv2.COLOR_BGR2RGB)
             self.h, self.w, _ = self.imagen.shape
@@ -203,6 +216,13 @@ class CVMano:
 
         # Liberar recursos al finalizar
 
+    def precionarTecla(self,d=0.5,t='w'):
+        def tarea():
+            pyautogui.keyDown(t)
+            time.sleep(d)
+            pyautogui.keyUp(t)
+        threading.Thread(target=tarea, daemon=True).start()    
+         
 
     def __dedosCerrados(self,hand_landmarks):
             self.__dedos_cerrados_estado = []
@@ -300,7 +320,7 @@ class CVMano:
                 autopy.mouse.move(cubix,cubiy) 
                 self.pubix, self.pubiy = cubix, cubiy
         except Exception as e:
-            print(f"{e}")
+            print(f"error {e}")
 
     def Scroll(self):
         try:
@@ -351,4 +371,11 @@ class CVMano:
         self.manoDerecha.setCorazon(self.atajosManos[indices[1]])
         self.manoDerecha.setAnular(self.atajosManos[indices[2]])
         self.manoDerecha.setMeñique(self.atajosManos[indices[3]])
+
+    def ModoGame(self):
+        print(1)
+        self.manoIzquierda.setIndice(self.modoGames['indice'])
+        self.manoIzquierda.setCorazon(self.modoGames['corazon'])
+        self.manoIzquierda.setAnular(self.modoGames['anular'])
+        self.manoIzquierda.setMeñique(self.modoGames['meniqie'])
   
