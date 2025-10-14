@@ -328,22 +328,25 @@ class CVMano:
             self.__enlace_principal_abierto = True
    
     def __moverMouseSuavizado(self):
-        try:
-            self.x=self.CVMano.landmark[8].x*self.w
-            self.y=self.CVMano.landmark[8].y*self.h
-            
-            if((self.x>(self.w/2)-20 and self.x<self.w-20 ) and (self.y<self.h-30 and self.y>30)):
-                x3 = np.interp(self.x, [(self.w/2)-20, self.w-20], [0, self.__anchopanta])  # Lista correcta
+        def tarea():
+            try:
+                self.x=self.CVMano.landmark[8].x*self.w
+                self.y=self.CVMano.landmark[8].y*self.h
+                
+                if((self.x>(self.w/2)-20 and self.x<self.w-20 ) and (self.y<self.h-30 and self.y>30)):
+                    x3 = np.interp(self.x, [(self.w/2)-20, self.w-20], [0, self.__anchopanta])  # Lista correcta
 
-                y3 = np.interp(self.y, [30,self.h-30  ], [0, self.__altopanta])    
+                    y3 = np.interp(self.y, [30,self.h-30  ], [0, self.__altopanta])    
 
-                cubix = self.pubix + (x3 - self.pubix) / self.__ventana_suavizado
-                cubiy = self.pubiy + (y3 - self.pubiy) / self.__ventana_suavizado
+                    cubix = self.pubix + (x3 - self.pubix) / self.__ventana_suavizado
+                    cubiy = self.pubiy + (y3 - self.pubiy) / self.__ventana_suavizado
 
-                autopy.mouse.move(cubix,cubiy) 
-                self.pubix, self.pubiy = cubix, cubiy
-        except Exception as e:
-            print(f"error {e}")
+                    autopy.mouse.move(cubix,cubiy) 
+                    self.pubix, self.pubiy = cubix, cubiy
+            except Exception as e:
+                print(f"error {e}")
+        threading.Thread(target=tarea, daemon=True).start()  
+        
 
     def Scroll(self):
         try:
