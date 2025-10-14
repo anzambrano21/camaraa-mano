@@ -14,7 +14,8 @@ from mano import Mano
 import base64
 import json
 import threading
-
+import pydirectinput
+import math
 class CVMano:
 
 
@@ -41,6 +42,7 @@ class CVMano:
             'corazon':lambda: self.precionarTecla(1,'w'),
             'anular':lambda: self.precionarTecla(1,'a'),
             'meniqie':lambda: self.precionarTecla(1,'shift'),
+            'mause': self.__movermouseV2
         }
 
         self.cargar()
@@ -48,7 +50,7 @@ class CVMano:
         self.__camara = cv2.VideoCapture(0)
         self.__Mpmanos = mp.solutions.hands
         self.__manos = self.__Mpmanos.Hands(static_image_mode=False,
-                                            max_num_hands=1,
+                                            max_num_hands=2,
                                             min_detection_confidence=0.9,
                                             min_tracking_confidence=0.8)
         self.__mpDibujar = mp.solutions.drawing_utils
@@ -97,7 +99,8 @@ class CVMano:
             print(f"Ocurrió un error inesperado: {e}")       
     def guardar_datos(self):
         try:
-            with open("Comando.json","w") as arch:
+            path_json = self.resource_path("Comando.json")
+            with open(path_json,"w") as arch:
                 json.dump(self.datos,arch,indent=4)
         except Exception as err:
             print(err)
@@ -209,16 +212,22 @@ class CVMano:
                                 
                                 self.manoDerecha.Indice()
                                
-                            if distanciaDed[1] < 25 and distanciaDed[2] > 25:
-                                self.tX,self.tY=0,0 
+                            elif distanciaDed[1] < 25 and distanciaDed[2] > 25:
+                                
                                 self.manoDerecha.Corazon()
                             
                             elif distanciaDed[2] < 25 and all(d > 25 for d in distanciaDed[3:]):
+                                print(f'{self.tX}, {self.tY} 1')
                                 self.manoDerecha.Anular()
+                                
                             elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
                                 self.manoDerecha.mañique()
-                            
+                            else:
+                                
                                 self.tX,self.tY=0,0 
+                                print(f'{self.tX}, {self.tY} 2')
+                            
+                                
             # --- ¡AQUÍ ESTÁ LA PARTE CRÍTICA QUE FALTA EN TU CÓDIGO ACTUAL! ---
             # Codificar la imagen (array NumPy de OpenCV) a formato JPEG en un búfer
             _, buffer = cv2.imencode('.jpg', self.imagen)
@@ -232,9 +241,9 @@ class CVMano:
 
     def precionarTecla(self,d=0.5,t='w'):
         def tarea():
-            pyautogui.keyDown(t)
+            pydirectinput.keyDown(t)
             time.sleep(d)
-            pyautogui.keyUp(t)
+            pydirectinput.keyUp(t)
         threading.Thread(target=tarea, daemon=True).start()    
          
 
@@ -355,19 +364,45 @@ class CVMano:
         self.__ventana_suavizado=c
   
     def __movermouseV2(self):
-            self.x, self.y = self.hand_landmarks.landmark[8].x *  self.w, self.hand_landmarks.landmark[8].y  * self.h
-            if(self.tY==0 and self.tX==0):
-                self.tX,self.tY=self.x,self.y
-            # Interpolar el movimiento para hacerlo más suave
+        try:
+            # Posición actual del dedo índice
+            self.x = self.CVMano.landmark[8].x * self.w
+            self.y = self.CVMano.landmark[8].y * self.h
+
+            # Primer punto de referencia
+            if self.tX == 0 and self.tY == 0:
+                self.tX, self.tY = self.x, self.y
+                return
+
+            # Vector de movimiento
             dx = self.x - self.tX
             dy = self.y - self.tY
 
-            # Solo mover si la diferencia es significativa
-            if abs(dx) > 5 or abs(dy) > 5:
-                pyautogui.moveRel(dx * 0.3, dy * 0.3)  # Suavizado con factor 0.6
+            # Calcular distancia (magnitud)
+            dist = math.sqrt(dx**2 + dy**2)
+            if dist == 0:
+                return
 
-        # Actualizar la posición actual
-  
+            # Normalizar vector (dirección)
+            nx = dx / dist
+            ny = dy / dist
+
+            # Limitar magnitud máxima
+            if dist > 1:
+                dist = 1
+
+            # Definir velocidad proporcional a la magnitud
+            velocidad = dist * 20  # ← puedes ajustar este factor
+
+            # Mover ratón según dirección y velocidad
+            pyautogui.moveRel(nx * velocidad, ny * velocidad)
+
+            # Actualizar referencia
+            #self.tX, self.tY = self.x, self.y
+
+        except Exception as e:
+            print(f"Error en __movermouseV2: {e}")
+
     def setUrl(self,url):
         self.__URL_PRINCIPAL=url
     
@@ -387,9 +422,9 @@ class CVMano:
         self.manoDerecha.setMeñique(self.atajosManos[indices[3]])
 
     def ModoGame(self):
-        print(1)
         self.manoIzquierda.setIndice(self.modoGames['indice'])
         self.manoIzquierda.setCorazon(self.modoGames['corazon'])
         self.manoIzquierda.setAnular(self.modoGames['anular'])
         self.manoIzquierda.setMeñique(self.modoGames['meniqie'])
-  
+
+        self.manoDerecha.setAnular(self.modoGames['mause'])
