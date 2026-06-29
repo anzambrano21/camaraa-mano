@@ -6,16 +6,14 @@ import json
 import base64
 import threading
 import webbrowser
-
 import cv2
-import numpy as np
 import mediapipe as mp
 import pyautogui
 import pydirectinput
 from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
+import comtypes
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-
+import numpy as np
 from mano import Mano
 
 # -------------------------------------------------------------------------
@@ -73,11 +71,11 @@ class CVMano:
 
         options = HandLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=self.resource_path('hand_landmarker.task')),
-            running_mode=VisionRunningMode.IMAGE,
+            running_mode=VisionRunningMode.VIDEO,
             num_hands=2,
-            min_hand_detection_confidence=0.9,
-            min_hand_presence_confidence=0.8,
-            min_tracking_confidence=0.8
+            min_hand_detection_confidence=0.5,
+            min_hand_presence_confidence=0.5,
+            min_tracking_confidence=0.5
         )
         self.__manos = HandLandmarker.create_from_options(options)
         
@@ -100,19 +98,34 @@ class CVMano:
         self.x, self.y = 0, 0
  
         self.CVMano = None
+        self.volume = None
         
         # Optimización de respuesta de entrada
         pyautogui.PAUSE = 0
         pydirectinput.PAUSE = 0
-        
-        # Bloque de volumen seguro ante conflictos de entorno
+        # -----------------------------------------------------------------
+        # NUEVO: Inicialización del control de volumen de Windows
+        # -----------------------------------------------------------------
         try:
-            devices = AudioUtilities.GetSpeakers()
-            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-            self.volume = cast(interface, POINTER(IAudioEndpointVolume))
+            
+            # Inicializamos COM para evitar fallos de inicialización en subprocesos o hilos
+            comtypes.CoInitialize() 
+            
+            # Obtenemos el objeto de la clase AudioDevice
+            speakers_device = AudioUtilities.GetSpeakers()
+            
+            if speakers_device:
+                # La propiedad interna se encarga de llamar a .Activate() de forma nativa por ti
+                self.volume = speakers_device.EndpointVolume
+            else:
+                self.volume = None
+                print("[PRECAUCIÓN] No se detectaron altavoces activos.")
         except Exception as e:
             print(f"[PRECAUCIÓN] No se pudo inicializar el control de volumen por COM: {e}")
             self.volume = None
+        # -----------------------------------------------------------------
+        
+
     
     @staticmethod
     def ejecutar_en_hilo(func, *args, **kwargs):
@@ -178,7 +191,8 @@ class CVMano:
             self.h, self.w, _ = self.imagen.shape
             
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
-            self.result = self.__manos.detect(mp_image)
+            timestamp_ms = int(time.time() * 1000)
+            self.result = self.__manos.detect_for_video(mp_image, timestamp_ms)
 
             if self.result.hand_landmarks:
                 for hand_landmarks_raw, handedness_raw in zip(self.result.hand_landmarks, self.result.handedness):
@@ -257,7 +271,8 @@ class CVMano:
         self.h, self.w, _ = self.imagen.shape
         
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
-        self.result = self.__manos.detect(mp_image)
+        timestamp_ms = int(time.time() * 1000)
+        self.result = self.__manos.detect_for_video(mp_image, timestamp_ms)
 
         if self.result.hand_landmarks:
             for hand_landmarks_raw, handedness_raw in zip(self.result.hand_landmarks, self.result.handedness):
@@ -298,7 +313,7 @@ class CVMano:
                                 self.manoIzquierda.Anular()
                             elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
                                 # CORREGIDO: de mañique() a meñique() según la clase Mano típica
-                                self.manoIzquierda.meñique() 
+                                self.manoIzquierda.mañique() 
                             
                     elif label == 'Left':
                         distanciaDed = self.__distanciaDedo(hand_landmarks)
@@ -310,7 +325,7 @@ class CVMano:
                             self.manoDerecha.Anular()
                         elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
                             # CORREGIDO: de mañique() a meñique()
-                            self.manoDerecha.meñique() 
+                            self.manoDerecha.mañique() 
                         else:
                             self.tX, self.tY = 0, 0 
                            
@@ -381,27 +396,27 @@ class CVMano:
         return distancia
   
     def __volumen(self, p1=None, p2=None):
-        if self.volume is None:
-            return
         if p1 is not None and p2 is not None:
             distancia_pixeles = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
         else:
-            if self.CVMano is None: return
+            if self.CVMano is None: 
+                return
             puntaindice = self.CVMano.landmark[8]
             puntapulgar = self.CVMano.landmark[4]
             x2, y2 = puntaindice.x * self.w, puntaindice.y * self.h
             x1, y1 = puntapulgar.x * self.w, puntapulgar.y * self.h
             distancia_pixeles = math.hypot(x2 - x1, y2 - y1)
         
-        # OPTIMIZACIÓN: Mapeo inteligente. 20px (dedos juntos) = 0% volumen. 160px (dedos separados) = 100% volumen.
+        # Mapeo inteligente usando escalares (0.0 a 1.0 / 0% a 100%)
+        # 20px (dedos juntos) -> 0% volumen | 160px (dedos separados) -> 100% volumen
         porcentaje = np.interp(distancia_pixeles, [20, 160], [0, 100])
-        porcentaje = max(0, min(100, porcentaje))
+        porcentaje = max(0, min(100, porcentaje)) # Asegura que se mantenga entre 0 y 100
         
         try:
+            # SetMasterVolumeLevelScalar acepta valores de 0.0 a 1.0 de forma lineal
             self.volume.SetMasterVolumeLevelScalar(porcentaje / 100, None)
         except Exception as e:
-            print(f"Error al cambiar volumen: {e}")
-
+            print(f"Error al cambiar volumen: {e}") 
     def __press_alt_tab(self, duration=0.5, n=1):
         try:
             pyautogui.keyDown('alt')
