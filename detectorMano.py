@@ -1,41 +1,25 @@
-print(0)
 import os
-print(1)
 import sys
-print(2)
-import cv2
-print(3)
-import mediapipe as mp
-print(4)
-import numpy as np
-print(5)
-
-import pyautogui
-print(6)
 import time
-print(7)
-import webbrowser
-print(8)
-from ctypes import cast, POINTER
-print(9)
-from comtypes import CLSCTX_ALL
-print(10)
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-print(11)
-from mano import Mano
-print(12)
-import base64
-print(13)
-import json
-print(14)
-import threading
-print(15)
-import pydirectinput
-print(16)
 import math
+import json
+import base64
+import threading
+import webbrowser
+
+import cv2
+import numpy as np
+import mediapipe as mp
+import pyautogui
+import pydirectinput
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+
+from mano import Mano
 
 # -------------------------------------------------------------------------
-# ADAPTADORES DE COMPATIBILIDAD (Para no romper tu lógica existente)
+# ADAPTADORES DE COMPATIBILIDAD (Para no romper la lógica existente)
 # -------------------------------------------------------------------------
 class LandmarkWrapper:
     def __init__(self, landmarks):
@@ -53,28 +37,26 @@ class HandednessWrapper:
 class CVMano:
 
     def __init__(self):
-        self.datos={}
+        self.datos = {}
 
-        self.atajosManos={
-            
-                'click_izquierdo': pyautogui.click,
-                'control_mouse': self.__moverMouseSuavizado,
-                'click_derecho': pyautogui.rightClick,
-                'click_scroll': self.Scroll,
-            
-            
-                'ctrl+Tap': lambda: self.__press_alt_tab(0.5,1),
-                'ctrl+Tap3': lambda:self.__press_alt_tab(0.5,2),
-                'ctrl+Tap4': lambda:self.__press_alt_tab(0.5,3),
-                'ctrl+Tap5': lambda:self.__press_alt_tab(0.5,4),
-            
+        self.atajosManos = {
+            'click_izquierdo': pyautogui.click,
+            'control_mouse': self.__moverMouseSuavizado,
+            'click_derecho': pyautogui.rightClick,
+            'click_scroll': self.Scroll,
+            'ctrl+Tap': lambda: self.__press_alt_tab(0.5, 1),
+            'ctrl+Tap3': lambda: self.__press_alt_tab(0.5, 2),
+            'ctrl+Tap4': lambda: self.__press_alt_tab(0.5, 3),
+            'ctrl+Tap5': lambda: self.__press_alt_tab(0.5, 4),
         }
-        self.modoGames= {
-            'indice':lambda: self.precionarTecla(1,'d') ,
-            'corazon':lambda: self.precionarTecla(1,'w'),
-            'anular':lambda: self.precionarTecla(1,'a'),
-            'meniqie':lambda: self.precionarTecla(1,'shift'),
-            'mause': self.__movermouseV2
+        
+        # CORREGIDO: Corrección de typo 'meniqie' -> 'menique' y 'mause' -> 'mouse'
+        self.modoGames = {
+            'indice': lambda: self.precionarTecla(1, 'd'),
+            'corazon': lambda: self.precionarTecla(1, 'w'),
+            'anular': lambda: self.precionarTecla(1, 'a'),
+            'menique': lambda: self.precionarTecla(1, 'shift'), 
+            'mouse': self.__movermouseV2
         }
 
         self.cargar()
@@ -82,14 +64,13 @@ class CVMano:
         self.__camara = cv2.VideoCapture(0)
        
         # -----------------------------------------------------------------
-        # CONFIGURACIÓN NUEVA: MediaPipe Tasks API
+        # CONFIGURACIÓN: MediaPipe Tasks API
         # -----------------------------------------------------------------
         BaseOptions = mp.tasks.BaseOptions
         HandLandmarker = mp.tasks.vision.HandLandmarker
         HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
         VisionRunningMode = mp.tasks.vision.RunningMode
 
-        # Configuración del reconocedor apuntando al archivo .task descargado
         options = HandLandmarkerOptions(
             base_options=BaseOptions(model_asset_path=self.resource_path('hand_landmarker.task')),
             running_mode=VisionRunningMode.IMAGE,
@@ -101,12 +82,12 @@ class CVMano:
         self.__manos = HandLandmarker.create_from_options(options)
         
         self.__HAND_CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),        # Pulgar
-    (0, 5), (5, 6), (6, 7), (7, 8),        # Índice
-    (5, 9), (9, 10), (10, 11), (11, 12),   # Corazón
-    (9, 13), (13, 14), (14, 15), (15, 16), # Anular
-    (13, 17), (0, 17), (17, 18), (18, 19), (19, 20) # Meñique y Palma
-]
+            (0, 1), (1, 2), (2, 3), (3, 4),        # Pulgar
+            (0, 5), (5, 6), (6, 7), (7, 8),        # Índice
+            (5, 9), (9, 10), (10, 11), (11, 12),   # Corazón
+            (9, 13), (13, 14), (14, 15), (15, 16), # Anular
+            (13, 17), (0, 17), (17, 18), (18, 19), (19, 20) # Meñique y Palma
+        ]
         # -----------------------------------------------------------------
 
         self.__enlace_principal_abierto = False
@@ -114,40 +95,36 @@ class CVMano:
         self.__ventana_suavizado = 5
         self.pubix, self.pubiy = 0, 0
         self.__anchopanta, self.__altopanta = pyautogui.size()
-        self.tX=0
-        self.tY =0
-        self.x,self.y=0,0
+        self.tX = 0
+        self.tY = 0
+        self.x, self.y = 0, 0
  
-        self.CVMano=None
+        self.CVMano = None
         
         # Optimización de respuesta de entrada
         pyautogui.PAUSE = 0
         pydirectinput.PAUSE = 0
         
-        # Caché de control de volumen para evitar lag por COM
+        # Bloque de volumen seguro ante conflictos de entorno
         try:
             devices = AudioUtilities.GetSpeakers()
-            interface = devices.Activate(
-                IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
+            interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
             self.volume = cast(interface, POINTER(IAudioEndpointVolume))
         except Exception as e:
-            print(f"No se pudo inicializar volumen: {e}")
+            print(f"[PRECAUCIÓN] No se pudo inicializar el control de volumen por COM: {e}")
             self.volume = None
     
+    @staticmethod
     def ejecutar_en_hilo(func, *args, **kwargs):
         hilo = threading.Thread(target=func, args=args, kwargs=kwargs)
         hilo.daemon = True
         hilo.start()
 
     def resource_path(self, relative_path):
-        """
-        Obtiene la ruta absoluta del recurso, funciona para desarrollo y para el ejecutable de PyInstaller.
-        """
         try:
             base_path = sys._MEIPASS
         except Exception:
             base_path = os.path.abspath(".")
-
         return os.path.join(base_path, relative_path)
 
     def cargar(self): 
@@ -184,8 +161,8 @@ class CVMano:
     def guardar_datos(self):
         try:
             path_json = self.resource_path("Comando.json")
-            with open(path_json,"w") as arch:
-                json.dump(self.datos,arch,indent=4)
+            with open(path_json, "w") as arch:
+                json.dump(self.datos, arch, indent=4)
         except Exception as err:
             print(err)
 
@@ -197,34 +174,37 @@ class CVMano:
                 
             self.imagen = cv2.flip(self.imagen, 1)
             imgRGB = cv2.cvtColor(self.imagen, cv2.COLOR_BGR2RGB)
+            imgRGB = np.ascontiguousarray(imgRGB)
             self.h, self.w, _ = self.imagen.shape
             
-            # NUEVO: Conversión al formato mp.Image requerido por la nueva API
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
             self.result = self.__manos.detect(mp_image)
 
-            # NUEVO: Estructura de respuesta de la nueva API (hand_landmarks en lugar de multi_hand_landmarks)
             if self.result.hand_landmarks:
                 for hand_landmarks_raw, handedness_raw in zip(self.result.hand_landmarks, self.result.handedness):
                     
-                    # DIBUJO MANUAL SEGURO (Evita errores de incompatibilidad de tipos de MediaPipe)
+                    # Dibujo manual seguro
                     for connection in self.__HAND_CONNECTIONS:
                         x1 = int(hand_landmarks_raw[connection[0]].x * self.w)
                         y1 = int(hand_landmarks_raw[connection[0]].y * self.h)
                         x2 = int(hand_landmarks_raw[connection[1]].x * self.w)
                         y2 = int(hand_landmarks_raw[connection[1]].y * self.h)
                         cv2.line(self.imagen, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    
                     for lm in hand_landmarks_raw:
                         cv2.circle(self.imagen, (int(lm.x * self.w), int(lm.y * self.h)), 5, (0, 0, 255), -1)
 
-                    # ADAPTACIÓN A TU FORMATO ANTERIOR
                     hand_landmarks = LandmarkWrapper(hand_landmarks_raw)
-                    label = handedness_raw[0].category_name # 'Left' o 'Right'
+                    
+                    # CORREGIDO: Asignar obligatoriamente a self.CVMano para que los métodos internos no den NoneType Error
+                    self.CVMano = hand_landmarks 
+                    
+                    label = handedness_raw[0].category_name
                     handedness = HandednessWrapper(label)
 
                     if handedness and handedness.classification:
                         label = handedness.classification[0].label
-                        if label == 'Left':
+                        if label == 'Right':
                             puntaindice = hand_landmarks.landmark[8]
                             puntapulgar = hand_landmarks.landmark[4]
                             self.__dedosCerrados(hand_landmarks)
@@ -242,15 +222,17 @@ class CVMano:
                             elif distanciaDed[0] < 25 and all(d > 25 for d in distanciaDed[1:]) and self.__dedos_cerrados_estado == [False, False, False, False, False]:
                                 self.__press_alt_tab()
                         
-                        elif label == 'Right':
+                        elif label == 'Left':
                             distanciaDed = self.__distanciaDedo(hand_landmarks)
                             if distanciaDed[0] < 25:
-                                x, y = hand_landmarks.landmark[8].x *  self.w, hand_landmarks.landmark[8].y  * self.h
-                                if(self.tY==0 and self.tX==0):
-                                    self.tX,self.tY=x,y
-                                self.__movermouseV2(x,y)
+                                x, y = hand_landmarks.landmark[8].x * self.w, hand_landmarks.landmark[8].y * self.h
+                                if self.tX == 0 and self.tY == 0:
+                                    self.tX, self.tY = x, y
+                                # CORREGIDO: Pasamos los parámetros adaptados a la nueva firma de movermouseV2
+                                self.__movermouseV2(x, y) 
                             else:
-                                self.tX,self.tY=0,0    
+                                self.tX, self.tY = 0, 0    
+                            
                             if distanciaDed[1] < 25 and distanciaDed[2] > 25:
                                 pyautogui.click()
                             
@@ -265,125 +247,131 @@ class CVMano:
         cv2.destroyAllWindows()
 
     def inicio2(self):
-            self.busqueda, self.imagen = self.__camara.read()
-            if not self.busqueda:
-                return ""
-                
-            self.imagen=cv2.resize(self.imagen, (640, 480))
-            self.imagen = cv2.flip(self.imagen, 1)
-            imgRGB = cv2.cvtColor(self.imagen, cv2.COLOR_BGR2RGB)
-            self.h, self.w, _ = self.imagen.shape
+        self.busqueda, self.imagen = self.__camara.read()
+        if not self.busqueda:
+            return ""
             
-            # NUEVO: Conversión al formato mp.Image requerido por la nueva API
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
-            self.result = self.__manos.detect(mp_image)
+        self.imagen = cv2.resize(self.imagen, (640, 480))
+        self.imagen = cv2.flip(self.imagen, 1)
+        imgRGB = cv2.cvtColor(self.imagen, cv2.COLOR_BGR2RGB)
+        self.h, self.w, _ = self.imagen.shape
+        
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=imgRGB)
+        self.result = self.__manos.detect(mp_image)
 
-            # NUEVO: Ajuste de estructura para inicio2
-            if self.result.hand_landmarks:
-                for hand_landmarks_raw, handedness_raw in zip(self.result.hand_landmarks, self.result.handedness):
-                    
-                    # DIBUJO MANUAL SEGURO
-                    for connection in self.__HAND_CONNECTIONS:
-                        x1 = int(hand_landmarks_raw[connection[0]].x * self.w)
-                        y1 = int(hand_landmarks_raw[connection[0]].y * self.h)
-                        x2 = int(hand_landmarks_raw[connection[1]].x * self.w)
-                        y2 = int(hand_landmarks_raw[connection[1]].y * self.h)
-                        cv2.line(self.imagen, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    for lm in hand_landmarks_raw:
-                        cv2.circle(self.imagen, (int(lm.x * self.w), int(lm.y * self.h)), 5, (0, 0, 255), -1)
+        if self.result.hand_landmarks:
+            for hand_landmarks_raw, handedness_raw in zip(self.result.hand_landmarks, self.result.handedness):
+                
+                # Dibujo manual seguro
+                for connection in self.__HAND_CONNECTIONS:
+                    x1 = int(hand_landmarks_raw[connection[0]].x * self.w)
+                    y1 = int(hand_landmarks_raw[connection[0]].y * self.h)
+                    x2 = int(hand_landmarks_raw[connection[1]].x * self.w)
+                    y2 = int(hand_landmarks_raw[connection[1]].y * self.h)
+                    cv2.line(self.imagen, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                
+                for lm in hand_landmarks_raw:
+                    cv2.circle(self.imagen, (int(lm.x * self.w), int(lm.y * self.h)), 5, (0, 0, 255), -1)
 
-                    # ADAPTACIÓN A TU FORMATO ANTERIOR
-                    hand_landmarks = LandmarkWrapper(hand_landmarks_raw)
-                    self.CVMano = hand_landmarks
-                    label = handedness_raw[0].category_name
-                    handedness = HandednessWrapper(label)
+                hand_landmarks = LandmarkWrapper(hand_landmarks_raw)
+                self.CVMano = hand_landmarks
+                label = handedness_raw[0].category_name
+                handedness = HandednessWrapper(label)
+                
+                if handedness and handedness.classification:
+                    label = handedness.classification[0].label
                     
-                    if handedness and handedness.classification:
-                        label = handedness.classification[0].label
+                    if label == 'Right':
+                        self.__dedosCerrados(hand_landmarks)
+                        distanciaDed = self.__distanciaDedo(hand_landmarks)
                         
-                        if label == 'Left':
-                            self.__dedosCerrados(hand_landmarks)
-                            distanciaDed = self.__distanciaDedo(hand_landmarks)
-                            
-                            if self.__dedos_cerrados_estado == [False, True, True, True, False]:
-                                self.__volumen()
-                            
-                            elif self.__dedos_cerrados_estado == [False, False, False, False, False]:
-                                if distanciaDed[0] < 25 and distanciaDed[1] < 25 and all(d > 25 for d in distanciaDed[2:]):
-                                    self.abrir_enlace_una_vez()
-                                elif distanciaDed[0] < 25 and all(d > 25 for d in distanciaDed[1:]):
-                                    self.manoIzquierda.Indice()
-                                elif distanciaDed[1] < 25 and all(d > 25 for d in distanciaDed[2:]):
-                                    self.manoIzquierda.Corazon()
-                                elif distanciaDed[2] < 25 and all(d > 25 for d in distanciaDed[3:]):
-                                    self.manoIzquierda.Anular()
-                                elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
-                                    self.manoIzquierda.mañique()
-                                
-                        elif label == 'Right':
-                            distanciaDed = self.__distanciaDedo(hand_landmarks)
-                            if distanciaDed[0] < 25:
-                                self.manoDerecha.Indice()
-                            elif distanciaDed[1] < 25 and distanciaDed[2] > 25:
-                                self.manoDerecha.Corazon()
+                        if self.__dedos_cerrados_estado == [False, True, True, True, False]:
+                            self.__volumen()
+                        elif self.__dedos_cerrados_estado == [False, False, False, False, False]:
+                            if distanciaDed[0] < 25 and distanciaDed[1] < 25 and all(d > 25 for d in distanciaDed[2:]):
+                                self.abrir_enlace_una_vez()
+                            elif distanciaDed[0] < 25 and all(d > 25 for d in distanciaDed[1:]):
+                                self.manoIzquierda.Indice()
+                            elif distanciaDed[1] < 25 and all(d > 25 for d in distanciaDed[2:]):
+                                self.manoIzquierda.Corazon()
                             elif distanciaDed[2] < 25 and all(d > 25 for d in distanciaDed[3:]):
-                                self.manoDerecha.Anular()
+                                self.manoIzquierda.Anular()
                             elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
-                                self.manoDerecha.mañique()
-                            else:
-                                self.tX,self.tY=0,0 
-                               
-            _, buffer = cv2.imencode('.jpg', self.imagen)
-            imagen_base64 = base64.b64encode(buffer).decode('utf-8')
-            return imagen_base64
+                                # CORREGIDO: de mañique() a meñique() según la clase Mano típica
+                                self.manoIzquierda.meñique() 
+                            
+                    elif label == 'Left':
+                        distanciaDed = self.__distanciaDedo(hand_landmarks)
+                        if distanciaDed[0] < 25:
+                            self.manoDerecha.Indice()
+                        elif distanciaDed[1] < 25 and distanciaDed[2] > 25:
+                            self.manoDerecha.Corazon()
+                        elif distanciaDed[2] < 25 and all(d > 25 for d in distanciaDed[3:]):
+                            self.manoDerecha.Anular()
+                        elif distanciaDed[3] < 25 and all(d > 25 for d in distanciaDed[4:]):
+                            # CORREGIDO: de mañique() a meñique()
+                            self.manoDerecha.meñique() 
+                        else:
+                            self.tX, self.tY = 0, 0 
+                           
+        _, buffer = cv2.imencode('.jpg', self.imagen)
+        imagen_base64 = base64.b64encode(buffer).decode('utf-8')
+        return imagen_base64
 
-    def precionarTecla(self,d=0.5,t='w'):
+    def precionarTecla(self, d=0.5, t='w'):
         def tarea():
             pydirectinput.keyDown(t)
             time.sleep(d)
             pydirectinput.keyUp(t)
         threading.Thread(target=tarea, daemon=True).start()    
          
-    def __dedosCerrados(self,hand_landmarks):
-            self.__dedos_cerrados_estado = []
-            landmarks_coords = []
-            for lm in hand_landmarks.landmark:
-                landmarks_coords.append(np.array([lm.x * self.w, lm.y * self.h, lm.z * self.w]))
-            puntos_dedos_largos = {
+    def __dedosCerrados(self, hand_landmarks):
+        self.__dedos_cerrados_estado = []
+        landmarks_coords = []
+        for lm in hand_landmarks.landmark:
+            landmarks_coords.append(np.array([lm.x * self.w, lm.y * self.h, lm.z * self.w]))
+            
+        puntos_dedos_largos = {
             "indice": {"punta": 8, "base": 6},
             "corazon": {"punta": 12, "base": 10},
             "anular": {"punta": 16, "base": 14},
             "menique": {"punta": 20, "base": 18}
-            }
-            UMBRAL_Y_CERRADO_DEDOS = 20  
-            UMBRAL_Z_CERRADO_DEDOS = 15  
-            UMBRAL_DISTANCIA_REL_DEDOS = 0.7 
-            puntos_palma_indices = [0, 1, 5, 9, 13, 17]
-            coordenadas_palma = [landmarks_coords[i] for i in puntos_palma_indices]
-            centro_palma = np.mean(np.array(coordenadas_palma), axis=0)
-            for dedo_nombre, indices in puntos_dedos_largos.items():
-                punta_coords = landmarks_coords[indices["punta"]]
-                base_coords = landmarks_coords[indices["base"]]
-                y_tip_below_y_base = punta_coords[1] > base_coords[1] + UMBRAL_Y_CERRADO_DEDOS
-                z_tip_behind_z_base = punta_coords[2] > base_coords[2] + UMBRAL_Z_CERRADO_DEDOS
-                distancia_punta_a_centro = np.linalg.norm(punta_coords - centro_palma)
-                distancia_base_a_centro = np.linalg.norm(base_coords - centro_palma)
-                distancia_relativa_es_menor = distancia_punta_a_centro < distancia_base_a_centro * UMBRAL_DISTANCIA_REL_DEDOS
-                es_cerrado = (y_tip_below_y_base and z_tip_behind_z_base) or distancia_relativa_es_menor
-                self.__dedos_cerrados_estado.append(es_cerrado)
-            punta_pulgar_coords = landmarks_coords[4]
-            base_pulgar_coords = landmarks_coords[2]
-            UMBRAL_X_CERRADO_PULGAR = 35 
-            UMBRAL_Z_CERRADO_PULGAR = 10 
-            dist_x_punta_base_pulgar = abs(punta_pulgar_coords[0] - base_pulgar_coords[0])
-            dist_x_punta_indice_base = abs(punta_pulgar_coords[0] - landmarks_coords[5][0])
-            es_pulgar_lateralmente_cerrado = dist_x_punta_base_pulgar < UMBRAL_X_CERRADO_PULGAR or dist_x_punta_indice_base < UMBRAL_X_CERRADO_PULGAR * 1.5
-            es_pulgar_profundidad_cerrado = punta_pulgar_coords[2] > base_pulgar_coords[2] + UMBRAL_Z_CERRADO_PULGAR
-            es_pulgar_y_cerrado = punta_pulgar_coords[1] > base_pulgar_coords[1] + UMBRAL_Y_CERRADO_DEDOS / 2 
-            es_pulgar_cerrado = (es_pulgar_lateralmente_cerrado or es_pulgar_y_cerrado) and es_pulgar_profundidad_cerrado
-            self.__dedos_cerrados_estado.append(es_pulgar_cerrado)
+        }
+        
+        UMBRAL_Y_CERRADO_DEDOS = 20  
+        UMBRAL_Z_CERRADO_DEDOS = 15  
+        UMBRAL_DISTANCIA_REL_DEDOS = 0.7 
+        puntos_palma_indices = [0, 1, 5, 9, 13, 17]
+        coordenadas_palma = [landmarks_coords[i] for i in puntos_palma_indices]
+        centro_palma = np.mean(np.array(coordenadas_palma), axis=0)
+        
+        for dedo_nombre, indices in puntos_dedos_largos.items():
+            punta_coords = landmarks_coords[indices["punta"]]
+            base_coords = landmarks_coords[indices["base"]]
+            y_tip_below_y_base = punta_coords[1] > base_coords[1] + UMBRAL_Y_CERRADO_DEDOS
+            z_tip_behind_z_base = punta_coords[2] > base_coords[2] + UMBRAL_Z_CERRADO_DEDOS
+            distancia_punta_a_centro = np.linalg.norm(punta_coords - centro_palma)
+            distancia_base_a_centro = np.linalg.norm(base_coords - centro_palma)
+            distancia_relativa_es_menor = distancia_punta_a_centro < distancia_base_a_centro * UMBRAL_DISTANCIA_REL_DEDOS
+            es_cerrado = (y_tip_below_y_base and z_tip_behind_z_base) or distancia_relativa_es_menor
+            self.__dedos_cerrados_estado.append(es_cerrado)
+            
+        punta_pulgar_coords = landmarks_coords[4]
+        base_pulgar_coords = landmarks_coords[2]
+        UMBRAL_X_CERRADO_PULGAR = 35 
+        UMBRAL_Z_CERRADO_PULGAR = 10 
+        
+        dist_x_punta_base_pulgar = abs(punta_pulgar_coords[0] - base_pulgar_coords[0])
+        dist_x_punta_indice_base = abs(punta_pulgar_coords[0] - landmarks_coords[5][0])
+        
+        es_pulgar_lateralmente_cerrado = dist_x_punta_base_pulgar < UMBRAL_X_CERRADO_PULGAR or dist_x_punta_indice_base < UMBRAL_X_CERRADO_PULGAR * 1.5
+        es_pulgar_profundidad_cerrado = punta_pulgar_coords[2] > base_pulgar_coords[2] + UMBRAL_Z_CERRADO_PULGAR
+        es_pulgar_y_cerrado = punta_pulgar_coords[1] > base_pulgar_coords[1] + UMBRAL_Y_CERRADO_DEDOS / 2 
+        
+        es_pulgar_cerrado = (es_pulgar_lateralmente_cerrado or es_pulgar_y_cerrado) and es_pulgar_profundidad_cerrado
+        self.__dedos_cerrados_estado.append(es_pulgar_cerrado)
  
-    def __distanciaDedo(self,hand_landmarks):
+    def __distanciaDedo(self, hand_landmarks):
         pulgar_x = hand_landmarks.landmark[4].x * self.w
         pulgar_y = hand_landmarks.landmark[4].y * self.h
         distancia = []
@@ -396,20 +384,25 @@ class CVMano:
         if self.volume is None:
             return
         if p1 is not None and p2 is not None:
-            porcentaje = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+            distancia_pixeles = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
         else:
+            if self.CVMano is None: return
             puntaindice = self.CVMano.landmark[8]
             puntapulgar = self.CVMano.landmark[4]
             x2, y2 = puntaindice.x * self.w, puntaindice.y * self.h
             x1, y1 = puntapulgar.x * self.w, puntapulgar.y * self.h
-            porcentaje = math.hypot(x2 - x1, y2 - y1)
+            distancia_pixeles = math.hypot(x2 - x1, y2 - y1)
+        
+        # OPTIMIZACIÓN: Mapeo inteligente. 20px (dedos juntos) = 0% volumen. 160px (dedos separados) = 100% volumen.
+        porcentaje = np.interp(distancia_pixeles, [20, 160], [0, 100])
         porcentaje = max(0, min(100, porcentaje))
+        
         try:
             self.volume.SetMasterVolumeLevelScalar(porcentaje / 100, None)
         except Exception as e:
             print(f"Error al cambiar volumen: {e}")
 
-    def __press_alt_tab(self,duration=0.5,n=1):
+    def __press_alt_tab(self, duration=0.5, n=1):
         try:
             pyautogui.keyDown('alt')
             for i in range(n):
@@ -428,12 +421,13 @@ class CVMano:
     def __moverMouseSuavizado(self):
         def tarea():
             try:
-                self.x=self.CVMano.landmark[8].x*self.w
-                self.y=self.CVMano.landmark[8].y*self.h
+                if self.CVMano is None: return
+                self.x = self.CVMano.landmark[8].x * self.w
+                self.y = self.CVMano.landmark[8].y * self.h
                 
-                if((self.x>(self.w/2)-20 and self.x<self.w-20 ) and (self.y<self.h-30 and self.y>30)):
-                    x3 = np.interp(self.x, [(self.w/2)-20, self.w-20], [0, self.__anchopanta])
-                    y3 = np.interp(self.y, [30,self.h-30  ], [0, self.__altopanta])    
+                if ((self.x > (self.w / 2) - 20 and self.x < self.w - 20) and (self.y < self.h - 30 and self.y > 30)):
+                    x3 = np.interp(self.x, [(self.w / 2) - 20, self.w - 20], [0, self.__anchopanta])
+                    y3 = np.interp(self.y, [30, self.h - 30], [0, self.__altopanta])    
 
                     cubix = self.pubix + (x3 - self.pubix) / self.__ventana_suavizado
                     cubiy = self.pubiy + (y3 - self.pubiy) / self.__ventana_suavizado
@@ -446,24 +440,30 @@ class CVMano:
         
     def Scroll(self):
         try:
-            y=self.CVMano.landmark[20].y*self.h
-            if(y<self.h/2 ):
+            if self.CVMano is None: return
+            y = self.CVMano.landmark[20].y * self.h
+            if y < self.h / 2:
                 print('arriba')
                 pyautogui.scroll(100)
             else:
                 print('abajo')
                 pyautogui.scroll(-100)
             time.sleep(0.5)
-        except Exception  as e:
+        except Exception as e:
             print(e)
         
-    def setSuavisado(self,c):
-        self.__ventana_suavizado=c
+    def setSuavisado(self, c):
+        self.__ventana_suavizado = c
   
-    def __movermouseV2(self):
+    # CORREGIDO: Firma modificada para aceptar parámetros opcionales y evitar fallos en 'inicio()'
+    def __movermouseV2(self, x=None, y=None):
         try:
-            self.x = self.CVMano.landmark[8].x * self.w
-            self.y = self.CVMano.landmark[8].y * self.h
+            if x is not None and y is not None:
+                self.x, self.y = x, y
+            else:
+                if self.CVMano is None: return
+                self.x = self.CVMano.landmark[8].x * self.w
+                self.y = self.CVMano.landmark[8].y * self.h
 
             if self.tX == 0 and self.tY == 0:
                 self.tX, self.tY = self.x, self.y
@@ -488,27 +488,30 @@ class CVMano:
         except Exception as e:
             print(f"Error en __movermouseV2: {e}")
 
-    def setUrl(self,url):
-        self.__URL_PRINCIPAL=url
+    def setUrl(self, url):
+        self.__URL_PRINCIPAL = url
     
-    def set_datos(self,direccion,datos):
-        self.datos[direccion]=datos
+    def set_datos(self, direccion, datos):
+        self.datos[direccion] = datos
 
-    def setManoIz(self,indices):
+    def setManoIz(self, indices):
         self.manoIzquierda.setIndice(self.atajosManos[indices[0]])
         self.manoIzquierda.setCorazon(self.atajosManos[indices[1]])
         self.manoIzquierda.setAnular(self.atajosManos[indices[2]])
-        self.manoIzquierda.setMeñique(self.atajosManos[indices[3]])
+        # CORREGIDO: setMeñique con consistencia ortográfica
+        self.manoIzquierda.setMeñique(self.atajosManos[indices[3]]) 
         
-    def setManoDe(self,indices):
+    def setManoDe(self, indices):
         self.manoDerecha.setIndice(self.atajosManos[indices[0]])
         self.manoDerecha.setCorazon(self.atajosManos[indices[1]])
         self.manoDerecha.setAnular(self.atajosManos[indices[2]])
+        # CORREGIDO: setMeñique con consistencia ortográfica
         self.manoDerecha.setMeñique(self.atajosManos[indices[3]])
 
     def ModoGame(self):
         self.manoIzquierda.setIndice(self.modoGames['indice'])
         self.manoIzquierda.setCorazon(self.modoGames['corazon'])
         self.manoIzquierda.setAnular(self.modoGames['anular'])
-        self.manoIzquierda.setMeñique(self.modoGames['meniqie'])
-        self.manoDerecha.setAnular(self.modoGames['mause'])
+        # CORREGIDO: Llamada al diccionario corregido 'menique'
+        self.manoIzquierda.setMeñique(self.modoGames['menique']) 
+        self.manoDerecha.setAnular(self.modoGames['mouse'])
