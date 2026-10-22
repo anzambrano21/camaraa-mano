@@ -14,7 +14,7 @@ from ctypes import cast, POINTER
 import comtypes
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import numpy as np
-from mano import Mano
+from src.mano import Mano
 
 # -------------------------------------------------------------------------
 # ADAPTADORES DE COMPATIBILIDAD (Para no romper la lógica existente)

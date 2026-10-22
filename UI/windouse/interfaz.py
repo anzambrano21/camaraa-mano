@@ -3,7 +3,7 @@ import flet as ft
 import time
 from flet import Page
 import threading
-from detectorMano import CVMano
+from src.Windouse.detectorMano import CVMano
 
 
 def main(page: Page):
