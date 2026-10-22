@@ -1,3 +1,4 @@
+import platform
 import os
 import sys
 import time
@@ -9,13 +10,19 @@ import webbrowser
 import cv2
 import mediapipe as mp
 import pyautogui
-import pydirectinput
-from ctypes import cast, POINTER
-import comtypes
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import numpy as np
 from mano import Mano
 
+# Importar librerías exclusivas de Windows de forma condicional
+if platform.system() == 'Windows':
+    import pydirectinput
+    import comtypes
+    from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+else:
+    pydirectinput = None
+    comtypes = None
+    AudioUtilities = None
+    IAudioEndpointVolume = None
 # -------------------------------------------------------------------------
 # ADAPTADORES DE COMPATIBILIDAD (Para no romper la lógica existente)
 # -------------------------------------------------------------------------
@@ -102,31 +109,31 @@ class CVMano:
         
         # Optimización de respuesta de entrada
         pyautogui.PAUSE = 0
-        pydirectinput.PAUSE = 0
-        # -----------------------------------------------------------------
-        # NUEVO: Inicialización del control de volumen de Windows
-        # -----------------------------------------------------------------
-        try:
+        if platform.system() == 'Windows' and pydirectinput:
+            pydirectinput.PAUSE = 0
             
-            # Inicializamos COM para evitar fallos de inicialización en subprocesos o hilos
-            comtypes.CoInitialize() 
-            
-            # Obtenemos el objeto de la clase AudioDevice
-            speakers_device = AudioUtilities.GetSpeakers()
-            
-            if speakers_device:
-                # La propiedad interna se encarga de llamar a .Activate() de forma nativa por ti
-                self.volume = speakers_device.EndpointVolume
-            else:
-                self.volume = None
-                print("[PRECAUCIÓN] No se detectaron altavoces activos.")
-        except Exception as e:
-            print(f"[PRECAUCIÓN] No se pudo inicializar el control de volumen por COM: {e}")
-            self.volume = None
         # -----------------------------------------------------------------
-        
+        # NUEVO: Inicialización del control de volumen (Compatible con Windows/Linux)
+        # -----------------------------------------------------------------
+        self.volume = None
+        if platform.system() == 'Windows':
+            try:
+                # Inicializamos COM para evitar fallos de inicialización en subprocesos o hilos
+                comtypes.CoInitialize() 
+                
+                # Obtenemos el objeto de la clase AudioDevice
+                speakers_device = AudioUtilities.GetSpeakers()
+                
+                if speakers_device:
+                    # La propiedad interna se encarga de llamar a .Activate() de forma nativa por ti
+                    self.volume = speakers_device.EndpointVolume
+                else:
+                    print("[PRECAUCIÓN] No se detectaron altavoces activos.")
+            except Exception as e:
+                print(f"[PRECAUCIÓN] No se pudo inicializar el control de volumen por COM: {e}")
+        else:
+            print("[INFO] El control de volumen por hardware está deshabilitado en Linux.")
 
-    
     @staticmethod
     def ejecutar_en_hilo(func, *args, **kwargs):
         hilo = threading.Thread(target=func, args=args, kwargs=kwargs)
@@ -335,10 +342,15 @@ class CVMano:
 
     def precionarTecla(self, d=0.5, t='w'):
         def tarea():
-            pydirectinput.keyDown(t)
-            time.sleep(d)
-            pydirectinput.keyUp(t)
-        threading.Thread(target=tarea, daemon=True).start()    
+            if platform.system() == 'Windows' and pydirectinput:
+                pydirectinput.keyDown(t)
+                time.sleep(d)
+                pydirectinput.keyUp(t)
+            else:
+                pyautogui.keyDown(t)
+                time.sleep(d)
+                pyautogui.keyUp(t)
+        threading.Thread(target=tarea, daemon=True).start()  
          
     def __dedosCerrados(self, hand_landmarks):
         self.__dedos_cerrados_estado = []
@@ -396,6 +408,9 @@ class CVMano:
         return distancia
   
     def __volumen(self, p1=None, p2=None):
+        if platform.system() != 'Windows' or self.volume is None:
+            return  # En Linux omite el control de volumen por pycaw
+            
         if p1 is not None and p2 is not None:
             distancia_pixeles = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
         else:
@@ -407,16 +422,13 @@ class CVMano:
             x1, y1 = puntapulgar.x * self.w, puntapulgar.y * self.h
             distancia_pixeles = math.hypot(x2 - x1, y2 - y1)
         
-        # Mapeo inteligente usando escalares (0.0 a 1.0 / 0% a 100%)
-        # 20px (dedos juntos) -> 0% volumen | 160px (dedos separados) -> 100% volumen
         porcentaje = np.interp(distancia_pixeles, [20, 160], [0, 100])
-        porcentaje = max(0, min(100, porcentaje)) # Asegura que se mantenga entre 0 y 100
+        porcentaje = max(0, min(100, porcentaje))
         
         try:
-            # SetMasterVolumeLevelScalar acepta valores de 0.0 a 1.0 de forma lineal
             self.volume.SetMasterVolumeLevelScalar(porcentaje / 100, None)
         except Exception as e:
-            print(f"Error al cambiar volumen: {e}") 
+            print(f"Error al cambiar volumen: {e}")
     def __press_alt_tab(self, duration=0.5, n=1):
         try:
             pyautogui.keyDown('alt')

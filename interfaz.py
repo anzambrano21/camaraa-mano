@@ -15,11 +15,11 @@ def main(page: Page):
     
     camara = CVMano()
     camera_feed_image = ft.Image(
-        src_base64="",  # Inicialmente vacío
-        fit=ft.ImageFit.CONTAIN,
+        src="",  # Inicialmente vacío
+        fit=ft.BoxFit.CONTAIN,
         width=840,  
         height=680,  
-        border_radius=ft.border_radius.all(25),
+        border_radius=ft.BorderRadius.all(25),
     )
 
     def procesarF():
@@ -31,7 +31,7 @@ def main(page: Page):
             
             try:
                 imagen = camara.inicio2()
-                camera_feed_image.src_base64 = imagen
+                camera_feed_image.src = imagen
                 # Usamos page.update() o el update del control de forma segura
                 camera_feed_image.update()
             except Exception as ex:
@@ -154,10 +154,10 @@ def main(page: Page):
             camara.guardar_datos()
             paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
             paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
-            page.open(ft.SnackBar(ft.Text('Configuración Guardada'), bgcolor=ft.Colors.GREEN_500))
+            page.show_dialog(ft.SnackBar(ft.Text('Configuración Guardada'), bgcolor=ft.Colors.GREEN_500))
             paginaAnimado.update()
         else:
-            page.open(ft.SnackBar(ft.Text('Valores Invalidos'), bgcolor=ft.Colors.RED_200))
+            page.show_dialog(ft.SnackBar(ft.Text('Valores Invalidos'), bgcolor=ft.Colors.RED_200))
             paginaAnimado.update()
     
     def set_MauseMap():
@@ -179,12 +179,12 @@ def main(page: Page):
                 camara.guardar_datos()
                 paginaAnimado.content = VistaSetinTeclado if paginaAnimado.content == paginaPrincipal else paginaPrincipal
                 paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
-                page.open(ft.SnackBar(ft.Text('Configuración Guardada'), bgcolor=ft.Colors.GREEN_500))
+                page.show_dialog(ft.SnackBar(ft.Text('Configuración Guardada'), bgcolor=ft.Colors.GREEN_500))
                 paginaAnimado.update()
             except Exception as e:
                 print(e)
         else:
-            page.open(ft.SnackBar(ft.Text('Valores Invalidos'), bgcolor=ft.Colors.RED_200))
+            page.show_dialog(ft.SnackBar(ft.Text('Valores Invalidos'), bgcolor=ft.Colors.RED_200))
             paginaAnimado.update()
 
     def SetNavegador(e):
@@ -228,16 +228,17 @@ def main(page: Page):
                         on_change=SetNavegador,
                         height=500,
                         selected_index=0,
+                        label_type=ft.NavigationRailLabelType.ALL,
                         destinations=[
-                            ft.NavigationRailDestination(icon=ft.Icons.HOME),
-                            ft.NavigationRailDestination(icon=ft.Icons.KEYBOARD),
-                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE)
+                            ft.NavigationRailDestination(icon=ft.Icons.HOME, label="Inicio"),
+                            ft.NavigationRailDestination(icon=ft.Icons.KEYBOARD, label="Teclado"),
+                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE, label="Mouse"),
                         ]
                     )
                 ),
                 ft.Container(
                     expand=True,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment.CENTER,
                     content=ft.Column(
                         alignment=ft.MainAxisAlignment.END,
                         controls=[
@@ -260,8 +261,8 @@ def main(page: Page):
                             expand=True,
                             content=camera_feed_image,
                             padding=10,
-                            border_radius=ft.border_radius.all(10),
-                            alignment=ft.alignment.center 
+                            border_radius=ft.BorderRadius.all(10),
+                            alignment=ft.Alignment.CENTER 
                         )
                     ],
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
@@ -287,7 +288,7 @@ def main(page: Page):
                     ft.Column([ft.Text('Anular'), radio_group_anular_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
                     ft.Column([ft.Text('Meñique'), radio_group_menique_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-            ]), margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+            ]), margin=ft.Margin.only(left=50, top=100, right=50, bottom=0)
     )
 
     VistaSetinTeclado = ft.Container(
@@ -308,7 +309,7 @@ def main(page: Page):
                 ),
             ]
         ),
-        margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+        margin=ft.Margin.only(left=50, top=100, right=50, bottom=0)
     )
 
     paginaAnimado = ft.AnimatedSwitcher(
@@ -335,8 +336,7 @@ def main(page: Page):
     thread = threading.Thread(target=procesarF, daemon=True)
     thread.start()
 
-# CAMBIO CLAVE: Cambiado ft.run(main) por ft.app
 if __name__ == "__main__":
     print("Iniciando aplicación Flet...")
-    ft.app(target=main)
+    ft.run(main)
     print("La aplicación se cerró.")
