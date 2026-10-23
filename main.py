@@ -1,12 +1,14 @@
 import sys
 import flet as ft
-import UI.windouse.interfaz
 if sys.platform.startswith('win'):
     print("Iniciando aplicación Flet...")
-    ft.app(target=interfaz.main)
+    from UI.windouse.interfaz import main
+    ft.app(target=main)
     print("La aplicación se cerró.")
 elif sys.platform.startswith('linux'):
     print("Estás en Linux")
+    from UI.linux.interfaz import main
+    ft.run(main)
 elif sys.platform == 'darwin':
     print("Estás en macOS")
 else:

@@ -335,8 +335,3 @@ def main(page: Page):
     thread = threading.Thread(target=procesarF, daemon=True)
     thread.start()
 
-# CAMBIO CLAVE: Cambiado ft.run(main) por ft.app
-if __name__ == "__main__":
-    print("Iniciando aplicación Flet...")
-    ft.app(target=main)
-    print("La aplicación se cerró.")
