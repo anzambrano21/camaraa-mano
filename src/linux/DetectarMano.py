@@ -14,6 +14,8 @@ HAND_CONNECTIONS = [
     (0, 17)                                # Base de la palma
 ]
 class CVMano:
+
+    datos={}
     def __init__(self, camera_index=0):
         # Resolver ruta absoluta al modelo hand_landmarker.task
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))

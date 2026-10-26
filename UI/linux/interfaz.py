@@ -62,13 +62,36 @@ def main(page: ft.Page):
 
     
     page.window.on_event = on_window_event
-    
+
+
     def SetNavegador(e):
-        pass
-        
+        """
+        try:
+            if paginaAnimado.content == VistaSetinTeclado:
+                set_tecladoMap()
+            elif paginaAnimado.content == VistaSetin:
+                set_MauseMap()
+        except Exception as ex:
+            print(ex)
+        """
+
+        index = e.control.selected_index
+        if index == 0:
+            paginaAnimado.content = paginaPrincipal
+        elif index == 1:
+            paginaAnimado.content = VistaSetinTeclado
+        else:
+            paginaAnimado.content = VistaSetin
+            
+        paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
+        page.update()
+
+     
     def modoGame(e):
         pass
-    
+    def setsenci(e):
+        coefi_text.value = e.value
+        coefi_text.update()
     """
     Definicion de de componentes de la interfaz (flet) 
     dedicado exclusivamente para crear componentes de la interfaz   
@@ -219,7 +242,44 @@ def main(page: ft.Page):
     )
    
     coefi_text = ft.Text("0", size=20)
+    suavizadoMause = ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change=setsenci)
 
+    VistaSetinTeclado = ft.Container(
+        ft.Column(
+            controls=[
+                ft.Text('Configuración de Teclado', size=50),
+                ft.Text('URL'),
+                url_text_field,
+                ft.Text('Atajos'),
+                ft.Row(
+                    controls=[
+                        ft.Column([ft.Text('Indice'), radio_group_indice], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                        ft.Column([ft.Text('Corazon'), radio_group_corazon], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                        ft.Column([ft.Text('Anular'), radio_group_anular], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                        ft.Column([ft.Text('Meñique'), radio_group_menique], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
+                ),
+            ]
+        ),
+        margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+    )
+
+    VistaSetin = ft.Container(
+        ft.Column(
+            controls=[
+                ft.Text('Configuración de Mouse', size=50),
+                ft.Text('Suavizado de Mouse'),
+                ft.Row(controls=[suavizadoMause, coefi_text]),
+                ft.Text('Atajos'),
+                ft.Row(controls=[
+                    ft.Column([ft.Text('Indice'), radio_group_indiceDere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                    ft.Column([ft.Text('Corazón'), radio_group_corazon_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                    ft.Column([ft.Text('Anular'), radio_group_anular_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                    ft.Column([ft.Text('Meñique'), radio_group_menique_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+            ]), margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+    )
 
     #definicion de pagina animada
     paginaAnimado = ft.AnimatedSwitcher(
