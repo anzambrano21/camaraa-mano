@@ -237,7 +237,7 @@ def main(page: Page):
                 ),
                 ft.Container(
                     expand=True,
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment.CENTER,
                     content=ft.Column(
                         alignment=ft.MainAxisAlignment.END,
                         controls=[

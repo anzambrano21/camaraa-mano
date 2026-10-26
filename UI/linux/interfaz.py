@@ -1,4 +1,7 @@
+import time
 import flet as ft
+from src.linux.DetectarMano import CVMano
+import asyncio
 
 def main(page: ft.Page):
 
@@ -9,36 +12,235 @@ def main(page: ft.Page):
     page.window.resizable = False
     page.window.maximizable = False
     
+    Detector = CVMano()
 
-    #componentes
-    Imagen=ft.Image(
-        src="",
-        width=640,
-        height=480,
+    # Componentes
+
+
+    #definicion de la imagen
+    camera_feed_image = ft.Image(
+        src="",  
+        width=840,  
+        height=680,  
         border_radius=25,
-        )
+        gapless_playback=True
+    )
+    
+    running = True
 
-    vistaPrincipal = ft.Container(
+    #definicion de funcion receptor de imagen para interfaz 
+    async def procesar_feed():
+        fps_objetivo = 30
+        tiempo_por_frame = 1 / fps_objetivo
+        while running:
+            inicio = time.time()
+            try:
+                frame_b64 = await asyncio.to_thread(Detector.get_Frame)
+                if frame_b64:
+                    camera_feed_image.src = frame_b64
+                    camera_feed_image.update()
+            except Exception as ex:
+                print(f"Error en feed de cámara: {ex}")
+                break
+
+            transcurrido = time.time() - inicio
+            if transcurrido < tiempo_por_frame:
+                await asyncio.sleep(tiempo_por_frame - transcurrido)
+            else:
+                await asyncio.sleep(0.001)
+
+    # Iniciar la captura de video en segundo plano
+    page.run_task(procesar_feed)
+    
+    #definicion de evento de cierre de ventana para liberacion de hilos de forma segura 
+    async def on_window_event(e):
+        nonlocal running
+        if e.data == "close":
+            running = False
+            Detector.liberar()
+            page.window.destroy()
+
+    
+    page.window.on_event = on_window_event
+    
+    def SetNavegador(e):
+        pass
+        
+    def modoGame(e):
+        pass
+    
+    """
+    Definicion de de componentes de la interfaz (flet) 
+    dedicado exclusivamente para crear componentes de la interfaz   
+       
+    """
+
+
+    navegador = ft.Container(
+        width=200, 
         padding=10,
-        content=ft.Row( controls=[
-            ft.Column(
+        content=ft.Column(
+            expand=True,
             controls=[
-                ft.IconButton(
-                    icon=ft.Icons.MOUSE,
-                    on_click=lambda e: print("Boton presionado"),
-                    icon_color="white"
+                ft.Container(
+                    border_radius=15, 
+                    height=500,
+                    content=ft.NavigationRail(
+                        on_change=SetNavegador,
+                        selected_index=0,
+                        destinations=[
+                            ft.NavigationRailDestination(icon=ft.Icons.HOME, label="Home"),
+                            ft.NavigationRailDestination(icon=ft.Icons.KEYBOARD, label="Set Keyboard"),
+                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE, label="Set Mouse")
+                        ]
+                    )
                 ),
-                ft.IconButton(
-                    icon=ft.Icons.KEYBOARD,
-                    on_click=lambda e: print("Boton presionado"),
-                    icon_color="white"
+                ft.Container(
+                    expand=True,
+                    alignment=ft.Alignment.CENTER,
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    content=ft.Column(
+                        alignment=ft.MainAxisAlignment.END,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Text('Modo Game', size=12, color=ft.Colors.WHITE),
+                            ft.Switch(value=False, on_change=modoGame)
+                        ]
+                    )
                 )
             ]
-        ),
-        Imagen
-        ])
+        )
     )
-    page.add(vistaPrincipal)
     
+    paginaPrincipal = ft.Container(
+        expand=True,
+        padding=20,
+        content=ft.Column(
+            controls=[
+                ft.Text('Captura de Cámara', size=28, weight="bold"),
+                ft.Container(
+                    content=camera_feed_image,
+                    padding=10,
+                    border_radius=10,
+                    alignment=ft.alignment.Alignment.CENTER
+                )
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
+            alignment=ft.MainAxisAlignment.START, 
+        )
+    )
+    
+    #pagina de configuracion
 
+
+    #Componentes de la pagina de configuraciomn mano izquierda
+    url_text_field = ft.TextField('', width=600, label="Introduce la URL aquí")
+
+    # 2. Referencias para los RadioGroup de Atajos
+    radio_group_indice = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value=Detector.datos['Izquierda']['indice'], 
+    )
+
+    radio_group_corazon = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value=Detector.datos['Izquierda']['corazon'], 
+    )
+
+    radio_group_anular = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value=Detector.datos['Izquierda']['anular'], 
+    )
+
+    radio_group_menique = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
+            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
+            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
+            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
+        ]),
+        value=Detector.datos['Izquierda']['menique'], 
+    )
+
+    # Radios botones de la mano derecha 
+    radio_group_indiceDere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value=Detector.datos['Derecha']['indice'], 
+    )
+
+    radio_group_corazon_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value=Detector.datos['Derecha']['corazon'], 
+    )
+
+    radio_group_anular_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value=Detector.datos['Derecha']['anular'], 
+    )
+
+    radio_group_menique_Dere = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
+            ft.Radio(value="click_derecho", label="Click Derecho"),
+            ft.Radio(value="control_mouse", label="Control Mouse"),
+            ft.Radio(value="click_scroll", label="Click Scroll"),
+        ]),
+        value=Detector.datos['Derecha']['menique'], 
+    )
+   
+    coefi_text = ft.Text("0", size=20)
+
+
+    #definicion de pagina animada
+    paginaAnimado = ft.AnimatedSwitcher(
+        paginaPrincipal,
+        transition="scale",
+        duration=500,
+        reverse_duration=100,
+        switch_in_curve="bounce_out",
+        switch_out_curve="bounce_in",
+        expand=True,
+    )
+    # Estructura principal dividida en dos columnas ordenadas
+    page.add(
+        ft.Row(
+            controls=[
+                navegador, 
+                ft.VerticalDivider(width=1), # Una línea divisoria elegante
+                paginaAnimado
+            ], 
+            expand=True,
+            vertical_alignment=ft.CrossAxisAlignment.START
+        )
+    )
 
