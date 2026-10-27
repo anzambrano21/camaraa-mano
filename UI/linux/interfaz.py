@@ -1,3 +1,4 @@
+from cv2.linemod import Detector
 import time
 import flet as ft
 from src.linux.DetectarMano import CVMano
@@ -71,15 +72,6 @@ def main(page: ft.Page):
 
     def SetNavegador(e):
         nonlocal Actualizacion
-        """
-        try:
-            if paginaAnimado.content == VistaSetinTeclado:
-                set_tecladoMap()
-            elif paginaAnimado.content == VistaSetin:
-                set_MauseMap()
-        except Exception as ex:
-            print(ex)
-        """
 
         index = e.control.selected_index
         if index == 0:
@@ -88,8 +80,11 @@ def main(page: ft.Page):
         elif index == 1:
             paginaAnimado.content = VistaSetinTeclado
             Actualizacion=False
-        else:
+        elif index == 2:
             paginaAnimado.content = VistaSetin
+            Actualizacion=False
+        elif index == 3:
+            #paginaAnimado.content = VistaSetinGestos
             Actualizacion=False
             
         paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
@@ -107,6 +102,30 @@ def main(page: ft.Page):
        
     """
 
+    #crear vista para la gestion de gestos 
+    def crear_lista_gestos():
+        """Genera la lista de gestos guardados con botón eliminar"""
+        items = []
+        for gesto in Detector.gestor.gestos:
+            items.append(
+                ft.ListTile(
+                    leading=ft.Icon(ft.Icons.GESTURE),
+                title=ft.Text(gesto["nombre"]),
+                subtitle=ft.Text(f"Mano: {gesto['mano']} | {gesto['accion']['tipo']}: {gesto['accion']['valor']}"),
+                trailing=ft.IconButton(
+                    ft.Icons.DELETE,
+                    on_click=lambda e, gid=gesto["id"]: eliminar_gesto(gid)
+                ),
+            )
+        )
+        return items
+
+    def eliminar_gesto(gesto_id):
+        Detector.gestor.eliminar_gesto(gesto_id)
+        lista_gestos_column.controls = crear_lista_gestos()
+        page.update()
+    
+
 
     navegador = ft.Container(
         width=200, 
@@ -123,7 +142,8 @@ def main(page: ft.Page):
                         destinations=[
                             ft.NavigationRailDestination(icon=ft.Icons.HOME, label="Home"),
                             ft.NavigationRailDestination(icon=ft.Icons.KEYBOARD, label="Set Keyboard"),
-                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE, label="Set Mouse")
+                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE, label="Set Mouse"),
+                            ft.NavigationRailDestination(icon=ft.Icons.GESTURE, label="Gestos")
                         ]
                     )
                 ),

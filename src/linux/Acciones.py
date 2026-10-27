@@ -7,14 +7,30 @@ class Acciones:
         self.keyboard=KBController()
         self.mouse=MouseController()
         
-    def ejecutaar(self,Accion):
-        pass
-    def ejecutar_Tecla(self):
-        pass
-    def ejecutarCombo(self):
-        pass
+    def ejecutar(self,Accion):
+        if Accion["tipo"] == "tecla":
+            self.ejecutar_Tecla(Accion["valor"])
+        elif Accion["tipo"] == "combo":
+            self.ejecutarCombo(Accion["valor"])
+        elif Accion["tipo"] == "click":
+            self.ejecutar_click()
+        elif Accion["tipo"] == "scroll":
+            self.ejecutar_scroll(Accion["valor"])
+    def ejecutar_Tecla(self,tecla):
+        self.keyboard.press(tecla)
+        self.keyboard.release(tecla)
+        time.sleep(0.1)
+    def ejecutarCombo(self,teclas):
+        for tecla in teclas:
+            self.keyboard.press(tecla)
+        for tecla in teclas:
+            self.keyboard.release(tecla)
+        time.sleep(0.1)
     def ejecutar_click(self):
-        pass
-    def ejecutar_scroll(self):
-        pass
+        self.mouse.press(Button.left)
+        self.mouse.release(Button.left)
+        time.sleep(0.1)
+    def ejecutar_scroll(self,direccion):
+        self.mouse.scroll(0, 6*direccion)
+        time.sleep(0.1)
         

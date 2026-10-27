@@ -1,3 +1,4 @@
+from flet.controls.core import reorderable_drag_handle
 from math import sqrt
 import os
 import cv2
@@ -6,14 +7,20 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import base64
 from util.herramienta import HAND_CONNECTIONS
+from src.linux.Acciones import Acciones
+from src.linux.GestorGestos import GestorGestos
 # Conexiones estándar de los 21 puntos clave de la mano
 
 class CVMano:
 
     
     def __init__(self, camera_index=0):
-        self.datos={"Izquierda":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}, 
-                     "Derecha":{"indice":"click_izquierdo", "corazon":"click_derecho", "anular":"control_mouse", "menique":"click_scroll"}}
+        self.gestor = GestorGestos()
+        self.ejecutor = Acciones()
+        self._cooldowns = {}
+        self._cooldown_ms = 500
+        self.ultimo_landmarks = {}  # {"Left": [...], "Right": [...]}
+
         # Resolver ruta absoluta al modelo hand_landmarker.task
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         model_path = os.path.join(base_dir, 'hand_landmarker.task')
@@ -65,10 +72,22 @@ class CVMano:
                     landmark_points.append((x, y))
                     # Dibujar el círculo rojo en cada articulación
                     cv2.circle(frame, (x, y), 4, (0, 0, 255), -1)
-                
-                
-                distancia_pulgar_indice = self.Distancia(landmark_points[4], landmark_points[8])
 
+                
+                # ANTES (borrar esto):
+                distancia_pulgar_indice = self.Distancia(landmark_points[4], landmark_points[8])
+                if hand == "Left":
+                    if distancia_pulgar_indice < 30:
+                        print("dedo indice y pulgar juntos")
+                else:
+                    print(distancia_pulgar_indice)
+
+                # DESPUÉS (poner esto):
+                self.ultimo_landmarks[hand] = landmark_points  # guardar para captura desde UI
+
+                gesto = self.gestor.detectar_gesto(landmark_points, hand)
+                if gesto and self._puede_ejecutar(gesto["nombre"]):
+                    self.ejecutor.ejecutar(gesto["accion"])
 
                 if hand == "Left":
                     if distancia_pulgar_indice < 30:
@@ -110,3 +129,17 @@ class CVMano:
             dedos.append(landmarks[tip][1] < landmarks[pip][1])
         
         return dedos  
+
+    def _puede_ejecutar(self, nombre_gesto):
+        import time
+        ahora = time.time() * 1000
+        ultimo = self._cooldowns.get(nombre_gesto, 0)
+        if ahora - ultimo > self._cooldown_ms:
+            self._cooldowns[nombre_gesto] = ahora
+            return True
+        return False
+    
+    def obtener_landmarks(self, mano="Left"):
+        """La UI llama esto cuando el usuario presiona 'Capturar Gesto'"""
+        return self.ultimo_landmarks.get(mano, None)
+    
