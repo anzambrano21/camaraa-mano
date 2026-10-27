@@ -9,7 +9,4 @@ elif sys.platform.startswith('linux'):
     print("Estás en Linux")
     from UI.linux.interfaz import main
     ft.run(main)
-elif sys.platform == 'darwin':
-    print("Estás en macOS")
-else:
-    print(f"Sistema operativo desconocido: {sys.platform}")
+

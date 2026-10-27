@@ -1,3 +1,4 @@
+from math import sqrt
 import os
 import cv2
 import mediapipe as mp
@@ -11,7 +12,8 @@ class CVMano:
 
     
     def __init__(self, camera_index=0):
-        self.datos={"Izquierda":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}, "Derecha":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}}
+        self.datos={"Izquierda":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}, 
+                     "Derecha":{"indice":"click_izquierdo", "corazon":"click_derecho", "anular":"control_mouse", "menique":"click_scroll"}}
         # Resolver ruta absoluta al modelo hand_landmarker.task
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         model_path = os.path.join(base_dir, 'hand_landmarker.task')
@@ -41,7 +43,7 @@ class CVMano:
 
         # Efecto espejo para mayor naturalidad
         frame = cv2.flip(frame, 1)
-        height, width, _ = frame.shape
+        self.height, self.width, _ = frame.shape
         
         # OpenCV lee en BGR, MediaPipe Tasks requiere RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -52,16 +54,27 @@ class CVMano:
 
         # Dibujar los resultados si se detectan manos
         if detection_result.hand_landmarks:
-            for hand_landmarks in detection_result.hand_landmarks:
+            for hand_landmarks, handedness in zip(detection_result.hand_landmarks, detection_result.handedness):
                 landmark_points = []
-                
+
+                hand= handedness[0].category_name
                 # Obtener coordenadas en píxeles de cada punto clave
                 for lm in hand_landmarks:
-                    x = int(lm.x * width)
-                    y = int(lm.y * height)
+                    x = int(lm.x * self.width)
+                    y = int(lm.y * self.height)
                     landmark_points.append((x, y))
                     # Dibujar el círculo rojo en cada articulación
                     cv2.circle(frame, (x, y), 4, (0, 0, 255), -1)
+                
+                
+                distancia_pulgar_indice = self.Distancia(landmark_points[4], landmark_points[8])
+
+
+                if hand == "Left":
+                    if distancia_pulgar_indice < 30:
+                        print("dedo indice y pulgar juntos")
+                else:
+                    print(distancia_pulgar_indice)
 
                 # Dibujar las líneas verdes que conectan la estructura de la mano
                 for connection in HAND_CONNECTIONS:
@@ -79,14 +92,21 @@ class CVMano:
             self.cap.release()
         cv2.destroyAllWindows()
 
-
-if __name__ == '__main__':
-    inicio = CVMano()
-    while True:
-        frame_b64 = inicio.get_Frame()
-        if not frame_b64:
-            break
-        # Si se ejecuta directamente para pruebas
-        if cv2.waitKey(5) & 0xFF == 27:
-            break
-    inicio.liberar()
+    def Distancia(self,pt1,pt2):
+        return sqrt((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)
+    
+    def dedos_extendidos(self,landmarks):
+        """Retorna lista de 5 booleanos [pulgar, indice, corazon, anular, menique]"""
+        dedos = []
+        
+        # Pulgar: comparar X del tip (4) vs X del IP (3)
+        # Depende de la mano (izq/der), usar distancia al landmark 0
+        dedos.append(self.Distancia(landmarks[4], landmarks[0]) > self.Distancia(landmarks[3], landmarks[0]))
+        
+        # Resto de dedos: tip.y < pip.y (en coordenadas de pantalla, Y crece hacia abajo)
+        tips = [8, 12, 16, 20]
+        pips = [6, 10, 14, 18]
+        for tip, pip in zip(tips, pips):
+            dedos.append(landmarks[tip][1] < landmarks[pip][1])
+        
+        return dedos  

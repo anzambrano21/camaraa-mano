@@ -27,16 +27,21 @@ def main(page: ft.Page):
     )
     
     running = True
+    Actualizacion=True
 
     #definicion de funcion receptor de imagen para interfaz 
     async def procesar_feed():
+        nonlocal Actualizacion
         fps_objetivo = 30
         tiempo_por_frame = 1 / fps_objetivo
         while running:
             inicio = time.time()
+            if not Actualizacion:
+                await asyncio.sleep(1)
+                continue
             try:
                 frame_b64 = await asyncio.to_thread(Detector.get_Frame)
-                if frame_b64:
+                if frame_b64 and Actualizacion:
                     camera_feed_image.src = frame_b64
                     camera_feed_image.update()
             except Exception as ex:
@@ -65,6 +70,7 @@ def main(page: ft.Page):
 
 
     def SetNavegador(e):
+        nonlocal Actualizacion
         """
         try:
             if paginaAnimado.content == VistaSetinTeclado:
@@ -78,10 +84,13 @@ def main(page: ft.Page):
         index = e.control.selected_index
         if index == 0:
             paginaAnimado.content = paginaPrincipal
+            Actualizacion=True
         elif index == 1:
             paginaAnimado.content = VistaSetinTeclado
+            Actualizacion=False
         else:
             paginaAnimado.content = VistaSetin
+            Actualizacion=False
             
         paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
         page.update()
@@ -90,7 +99,7 @@ def main(page: ft.Page):
     def modoGame(e):
         pass
     def setsenci(e):
-        coefi_text.value = e.value
+        coefi_text.value = str(e.control.value)
         coefi_text.update()
     """
     Definicion de de componentes de la interfaz (flet) 

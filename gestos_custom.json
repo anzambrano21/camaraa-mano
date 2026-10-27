@@ -1,0 +1,28 @@
+{
+    "gestos": [
+        {
+            "id": "pinch-indice-1698412800",
+            "nombre": "Pinch Índice",
+            "mano": "Left",
+            "dedos": [
+                true,
+                true,
+                false,
+                false,
+                false
+            ],
+            "distancias": {
+                "4-8": {
+                    "max": 35
+                }
+            },
+            "accion": {
+                "tipo": "tecla_combo",
+                "valor": [
+                    "ctrl",
+                    "c"
+                ]
+            }
+        }
+    ]
+}

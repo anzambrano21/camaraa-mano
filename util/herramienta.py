@@ -6,3 +6,11 @@ HAND_CONNECTIONS = [
     (13, 17), (17, 18), (18, 19), (19, 20),# Meñique
     (0, 17)                                # Base de la palma
 ]
+
+Hand_Point ={
+    "pulgar":[1,2,3,4],
+    "indice":[5,6,7,8],
+    "medio":[9,10,11,12],
+    "anular":[13,14,15,16],
+    "menique":[17,18,19,20]
+}
