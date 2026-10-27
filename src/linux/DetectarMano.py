@@ -4,19 +4,14 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import base64
+from util.herramienta import HAND_CONNECTIONS
 # Conexiones estándar de los 21 puntos clave de la mano
-HAND_CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),        # Pulgar
-    (0, 5), (5, 6), (6, 7), (7, 8),        # Índice
-    (5, 9), (9, 10), (10, 11), (11, 12),  # Medio
-    (9, 13), (13, 14), (14, 15), (15, 16),# Anular
-    (13, 17), (17, 18), (18, 19), (19, 20),# Meñique
-    (0, 17)                                # Base de la palma
-]
+
 class CVMano:
 
-    datos={}
+    
     def __init__(self, camera_index=0):
+        self.datos={"Izquierda":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}, "Derecha":{"indice":"ctrl+Tap", "corazon":"ctrl+Tap", "anular":"ctrl+Tap", "menique":"ctrl+Tap"}}
         # Resolver ruta absoluta al modelo hand_landmarker.task
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         model_path = os.path.join(base_dir, 'hand_landmarker.task')

@@ -47,7 +47,7 @@ def main(page: ft.Page):
             if transcurrido < tiempo_por_frame:
                 await asyncio.sleep(tiempo_por_frame - transcurrido)
             else:
-                await asyncio.sleep(0.001)
+                await asyncio.sleep(0.03)
 
     # Iniciar la captura de video en segundo plano
     page.run_task(procesar_feed)
@@ -262,7 +262,7 @@ def main(page: ft.Page):
                 ),
             ]
         ),
-        margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+        margin=ft.margin.Margin.only(left=50, top=100, right=50, bottom=0)
     )
 
     VistaSetin = ft.Container(
@@ -278,7 +278,7 @@ def main(page: ft.Page):
                     ft.Column([ft.Text('Anular'), radio_group_anular_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
                     ft.Column([ft.Text('Meñique'), radio_group_menique_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-            ]), margin=ft.margin.only(left=50, top=100, right=50, bottom=0)
+            ]), margin=ft.margin.Margin.only(left=50, top=100, right=50, bottom=0)
     )
 
     #definicion de pagina animada
