@@ -1,4 +1,4 @@
-from flet.controls.core import reorderable_drag_handle
+
 from math import sqrt
 import os
 import cv2
@@ -15,6 +15,24 @@ class CVMano:
 
     
     def __init__(self, camera_index=0):
+        self.datos={
+            "Izquierda":{
+                "pulgar":1,
+                "indice":1,
+                "corazon":1,
+                "anular":1,
+                "menique":1,
+                "gesto":None
+            },
+            "Derecha":{
+                "pulgar":1,
+                "indice":1,
+                "corazon":1,
+                "anular":1,
+                "menique":1,
+                "gesto":None
+            }
+        }
         self.gestor = GestorGestos()
         self.ejecutor = Acciones()
         self._cooldowns = {}
@@ -74,26 +92,14 @@ class CVMano:
                     cv2.circle(frame, (x, y), 4, (0, 0, 255), -1)
 
                 
-                # ANTES (borrar esto):
-                distancia_pulgar_indice = self.Distancia(landmark_points[4], landmark_points[8])
-                if hand == "Left":
-                    if distancia_pulgar_indice < 30:
-                        print("dedo indice y pulgar juntos")
-                else:
-                    print(distancia_pulgar_indice)
 
                 # DESPUÉS (poner esto):
                 self.ultimo_landmarks[hand] = landmark_points  # guardar para captura desde UI
 
-                gesto = self.gestor.detectar_gesto(landmark_points, hand)
+                gesto = self.gestor.detectarGestoss(landmark_points, hand)
+
                 if gesto and self._puede_ejecutar(gesto["nombre"]):
                     self.ejecutor.ejecutar(gesto["accion"])
-
-                if hand == "Left":
-                    if distancia_pulgar_indice < 30:
-                        print("dedo indice y pulgar juntos")
-                else:
-                    print(distancia_pulgar_indice)
 
                 # Dibujar las líneas verdes que conectan la estructura de la mano
                 for connection in HAND_CONNECTIONS:
@@ -142,4 +148,4 @@ class CVMano:
     def obtener_landmarks(self, mano="Left"):
         """La UI llama esto cuando el usuario presiona 'Capturar Gesto'"""
         return self.ultimo_landmarks.get(mano, None)
-    
+

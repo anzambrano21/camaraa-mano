@@ -1,4 +1,3 @@
-from cv2.linemod import Detector
 import time
 import flet as ft
 from src.linux.DetectarMano import CVMano
@@ -84,7 +83,7 @@ def main(page: ft.Page):
             paginaAnimado.content = VistaSetin
             Actualizacion=False
         elif index == 3:
-            #paginaAnimado.content = VistaSetinGestos
+            paginaAnimado.content = VistaSetinGestos
             Actualizacion=False
             
         paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
@@ -96,6 +95,23 @@ def main(page: ft.Page):
     def setsenci(e):
         coefi_text.value = str(e.control.value)
         coefi_text.update()
+    
+    def capturar_gesto(e):
+        mano = mano_selector.value
+        landmarks = Detector.obtener_landmarks(mano)
+        if landmarks is None:
+            # Mostrar SnackBar de error: "No se detecta la mano"
+            return
+        
+        nombre = nombre_gesto_field.value
+        accion = {
+            "tipo": tipo_accion_dropdown.value,
+            "valor": valor_accion_field.value  # parsear si es combo: "ctrl+c" → ["ctrl", "c"]
+        }
+        
+        Detector.gestor.registrar_gesto(nombre, mano, landmarks, accion)
+    # Actualizar lista, mostrar SnackBar de éxito, limpiar campos
+
     """
     Definicion de de componentes de la interfaz (flet) 
     dedicado exclusivamente para crear componentes de la interfaz   
@@ -110,23 +126,68 @@ def main(page: ft.Page):
             items.append(
                 ft.ListTile(
                     leading=ft.Icon(ft.Icons.GESTURE),
-                title=ft.Text(gesto["nombre"]),
-                subtitle=ft.Text(f"Mano: {gesto['mano']} | {gesto['accion']['tipo']}: {gesto['accion']['valor']}"),
-                trailing=ft.IconButton(
-                    ft.Icons.DELETE,
-                    on_click=lambda e, gid=gesto["id"]: eliminar_gesto(gid)
-                ),
+                    title=ft.Text(gesto["nombre"]),
+                    subtitle=ft.Text(f"Mano: {gesto['mano']} | {gesto['accion']['tipo']}: {gesto['accion']['valor']}"),
+                    trailing=ft.IconButton(
+                        ft.Icons.DELETE,
+                        on_click=lambda e, gid=gesto["id"]: eliminar_gesto(gid)
+                    ),
+                )
             )
-        )
         return items
 
     def eliminar_gesto(gesto_id):
         Detector.gestor.eliminar_gesto(gesto_id)
         lista_gestos_column.controls = crear_lista_gestos()
         page.update()
+
+    nombre_gesto_field = ft.TextField(label="Nombre del gesto")
+    mano_selector = ft.RadioGroup(
+        content=ft.Row([
+            ft.Radio(value="Left", label="Izquierda"),
+            ft.Radio(value="Right", label="Derecha"),
+            ft.Radio(value="Any", label="Cualquiera"),
+        ]),
+        value="Left"
+    )
+    tipo_accion_dropdown = ft.Dropdown(
+        label="Tipo de acción",
+        options=[
+            ft.dropdown.Option("tecla", "Tecla"),
+            ft.dropdown.Option("tecla_combo", "Combinación de teclas"),
+            ft.dropdown.Option("mouse_click", "Click de mouse"),
+            ft.dropdown.Option("mouse_scroll", "Scroll"),
+        ]
+    )
+    valor_accion_field = ft.TextField(label="Valor (ej: a, ctrl+c, click_izquierdo)")
+
+    lista_gestos_column = ft.Column(controls=crear_lista_gestos())
+
+    VistaSetinGestos = ft.Container(
+        ft.Column(
+            controls=[
+                ft.Text('Gestión de Gestos', size=50),
+                ft.Divider(),
+                ft.Text('Gestos guardados', size=20),
+                lista_gestos_column,
+                ft.Divider(),
+                ft.Text('Crear nuevo gesto', size=20),
+                nombre_gesto_field,
+                mano_selector,
+                tipo_accion_dropdown,
+                valor_accion_field,
+                ft.Button("🔴 Capturar y Guardar", on_click=capturar_gesto),
+            ],
+            scroll=ft.ScrollMode.AUTO,
+        ),
+        margin=ft.margin.Margin.only(left=50, top=50, right=50, bottom=0),
+        expand=True,
+    )
+
+
+
+
     
-
-
     navegador = ft.Container(
         width=200, 
         padding=10,

@@ -23,6 +23,27 @@
                     "c"
                 ]
             }
+        },
+        {
+            "id": "solo pulgar-1698412800",
+            "nombre": "solo pulgar",
+            "mano": "Right",
+            "dedos": [
+                true,
+                false,
+                false,
+                false,
+                false
+            ],
+            "distancias": {
+                "4-8": {
+                    "max": 35
+                }
+            },
+            "accion": {
+                "tipo": "tecla",
+                "valor": "a"
+            }
         }
     ]
 }
