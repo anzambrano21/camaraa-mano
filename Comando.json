@@ -1,25 +1,5 @@
 {
-    "Games": {
-        "estado": false,
-        "izquierda": {
-            "indice": "d",
-            "corazon": "s",
-            "anular": "w",
-            "menique": "a",
-            "pulgar": "space"
-        }
-    },
-    "Izquierda": {
-        "indice": "ctrl+Tap",
-        "corazon": "ctrl+Tap3",
-        "anular": "ctrl+Tap4",
-        "menique": "ctrl+Tap5"
-    },
-    "Derecha": {
-        "sensivilidad": 12,
-        "indice": "click_izquierdo",
-        "corazon": "click_derecho",
-        "anular": "control_mouse",
-        "menique": "click_scroll"
-    }
+    "Games": {},
+    "presentacion": {},
+    "oficina": {}
 }

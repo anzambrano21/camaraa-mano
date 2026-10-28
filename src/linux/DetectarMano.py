@@ -15,24 +15,6 @@ class CVMano:
 
     
     def __init__(self, camera_index=0):
-        self.datos={
-            "Izquierda":{
-                "pulgar":1,
-                "indice":1,
-                "corazon":1,
-                "anular":1,
-                "menique":1,
-                "gesto":None
-            },
-            "Derecha":{
-                "pulgar":1,
-                "indice":1,
-                "corazon":1,
-                "anular":1,
-                "menique":1,
-                "gesto":None
-            }
-        }
         self.gestor = GestorGestos()
         self.ejecutor = Acciones()
         self._cooldowns = {}

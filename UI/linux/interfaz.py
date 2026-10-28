@@ -77,25 +77,12 @@ def main(page: ft.Page):
             paginaAnimado.content = paginaPrincipal
             Actualizacion=True
         elif index == 1:
-            paginaAnimado.content = VistaSetinTeclado
-            Actualizacion=False
-        elif index == 2:
-            paginaAnimado.content = VistaSetin
-            Actualizacion=False
-        elif index == 3:
             paginaAnimado.content = VistaSetinGestos
             Actualizacion=False
             
         paginaAnimado.transition = ft.AnimatedSwitcherTransition.FADE
         page.update()
 
-     
-    def modoGame(e):
-        pass
-    def setsenci(e):
-        coefi_text.value = str(e.control.value)
-        coefi_text.update()
-    
     def capturar_gesto(e):
         mano = mano_selector.value
         landmarks = Detector.obtener_landmarks(mano)
@@ -117,6 +104,21 @@ def main(page: ft.Page):
     dedicado exclusivamente para crear componentes de la interfaz   
        
     """
+
+    def Crear_Lista_Opciones():
+        opciones=[]
+        for modo in Detector.gestor.modos:
+            opciones.append(
+                ft.dropdown.Option(modo)
+            )
+        return opciones
+
+    ListaModos=Crear_Lista_Opciones()
+    modos_selector = ft.Dropdown(
+        label="Modos",
+        options=ListaModos,
+        value="Sin modo"
+    )
 
     #crear vista para la gestion de gestos 
     def crear_lista_gestos():
@@ -202,8 +204,6 @@ def main(page: ft.Page):
                         selected_index=0,
                         destinations=[
                             ft.NavigationRailDestination(icon=ft.Icons.HOME, label="Home"),
-                            ft.NavigationRailDestination(icon=ft.Icons.KEYBOARD, label="Set Keyboard"),
-                            ft.NavigationRailDestination(icon=ft.Icons.MOUSE, label="Set Mouse"),
                             ft.NavigationRailDestination(icon=ft.Icons.GESTURE, label="Gestos")
                         ]
                     )
@@ -216,8 +216,7 @@ def main(page: ft.Page):
                         alignment=ft.MainAxisAlignment.END,
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
-                            ft.Text('Modo Game', size=12, color=ft.Colors.WHITE),
-                            ft.Switch(value=False, on_change=modoGame)
+                            modos_selector
                         ]
                     )
                 )
@@ -243,133 +242,9 @@ def main(page: ft.Page):
         )
     )
     
-    #pagina de configuracion
+    
 
-
-    #Componentes de la pagina de configuraciomn mano izquierda
-    url_text_field = ft.TextField('', width=600, label="Introduce la URL aquí")
-
-    # 2. Referencias para los RadioGroup de Atajos
-    radio_group_indice = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-        ]),
-        value=Detector.datos['Izquierda']['indice'], 
-    )
-
-    radio_group_corazon = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-        ]),
-        value=Detector.datos['Izquierda']['corazon'], 
-    )
-
-    radio_group_anular = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-        ]),
-        value=Detector.datos['Izquierda']['anular'], 
-    )
-
-    radio_group_menique = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="ctrl+Tap", label="Segunda Ventana"),
-            ft.Radio(value="ctrl+Tap3", label="Tercera Ventana"),
-            ft.Radio(value="ctrl+Tap4", label="Cuarta Ventana"),
-            ft.Radio(value="ctrl+Tap5", label="Quinta Ventana"),
-        ]),
-        value=Detector.datos['Izquierda']['menique'], 
-    )
-
-    # Radios botones de la mano derecha 
-    radio_group_indiceDere = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-            ft.Radio(value="click_derecho", label="Click Derecho"),
-            ft.Radio(value="control_mouse", label="Control Mouse"),
-            ft.Radio(value="click_scroll", label="Click Scroll"),
-        ]),
-        value=Detector.datos['Derecha']['indice'], 
-    )
-
-    radio_group_corazon_Dere = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-            ft.Radio(value="click_derecho", label="Click Derecho"),
-            ft.Radio(value="control_mouse", label="Control Mouse"),
-            ft.Radio(value="click_scroll", label="Click Scroll"),
-        ]),
-        value=Detector.datos['Derecha']['corazon'], 
-    )
-
-    radio_group_anular_Dere = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-            ft.Radio(value="click_derecho", label="Click Derecho"),
-            ft.Radio(value="control_mouse", label="Control Mouse"),
-            ft.Radio(value="click_scroll", label="Click Scroll"),
-        ]),
-        value=Detector.datos['Derecha']['anular'], 
-    )
-
-    radio_group_menique_Dere = ft.RadioGroup(
-        content=ft.Column([
-            ft.Radio(value="click_izquierdo", label="Click Izquierdo"),
-            ft.Radio(value="click_derecho", label="Click Derecho"),
-            ft.Radio(value="control_mouse", label="Control Mouse"),
-            ft.Radio(value="click_scroll", label="Click Scroll"),
-        ]),
-        value=Detector.datos['Derecha']['menique'], 
-    )
-   
-    coefi_text = ft.Text("0", size=20)
-    suavizadoMause = ft.CupertinoSlider(divisions=100, max=100, width=1000, on_change=setsenci)
-
-    VistaSetinTeclado = ft.Container(
-        ft.Column(
-            controls=[
-                ft.Text('Configuración de Teclado', size=50),
-                ft.Text('URL'),
-                url_text_field,
-                ft.Text('Atajos'),
-                ft.Row(
-                    controls=[
-                        ft.Column([ft.Text('Indice'), radio_group_indice], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                        ft.Column([ft.Text('Corazon'), radio_group_corazon], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                        ft.Column([ft.Text('Anular'), radio_group_anular], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                        ft.Column([ft.Text('Meñique'), radio_group_menique], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-                ),
-            ]
-        ),
-        margin=ft.margin.Margin.only(left=50, top=100, right=50, bottom=0)
-    )
-
-    VistaSetin = ft.Container(
-        ft.Column(
-            controls=[
-                ft.Text('Configuración de Mouse', size=50),
-                ft.Text('Suavizado de Mouse'),
-                ft.Row(controls=[suavizadoMause, coefi_text]),
-                ft.Text('Atajos'),
-                ft.Row(controls=[
-                    ft.Column([ft.Text('Indice'), radio_group_indiceDere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                    ft.Column([ft.Text('Corazón'), radio_group_corazon_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                    ft.Column([ft.Text('Anular'), radio_group_anular_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                    ft.Column([ft.Text('Meñique'), radio_group_menique_Dere], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-            ]), margin=ft.margin.Margin.only(left=50, top=100, right=50, bottom=0)
-    )
+    
 
     #definicion de pagina animada
     paginaAnimado = ft.AnimatedSwitcher(

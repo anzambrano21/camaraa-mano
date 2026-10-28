@@ -8,11 +8,17 @@ class GestorGestos:
     def __init__(self):
         dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         self.dir_gestos=os.path.join(dir,"gestos_custom.json")
+        self.dir_modos=os.path.join(dir,"Comando.json")
         self.gestos = []
+        self.modos={}
         self.cargar_gestos()
+        self.cargar_modos()
     def cargar_gestos(self):
         with open(self.dir_gestos, 'r') as f:
             self.gestos = json.load(f)['gestos']
+    def cargar_modos(self):
+        with open(self.dir_modos, 'r') as f:
+            self.modos = json.load(f)
     def guardar_gesto(self,nombre,mano,dedos,distancias,accion):
         self.gestos.append({
             "id": f"{nombre}-{int(time.time())}",

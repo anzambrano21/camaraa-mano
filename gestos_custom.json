@@ -44,6 +44,27 @@
                 "tipo": "tecla",
                 "valor": "a"
             }
+        },
+        {
+            "id": "tecla 1-1698412800",
+            "nombre": "Tecla 1",
+            "mano": "Right",
+            "dedos": [
+                true,
+                false,
+                false,
+                false,
+                false
+            ],
+            "distancias": {
+                "4-8": {
+                    "max": 35
+                }
+            },
+            "accion": {
+                "tipo": "tecla",
+                "valor": "1"
+            }
         }
     ]
 }
